@@ -1,4 +1,5 @@
 from dotenv import load_dotenv
+from fastapi.responses import RedirectResponse
 
 load_dotenv()
 
@@ -38,5 +39,11 @@ app.add_middleware(
 
 app.include_router(classes.router, prefix="/classes")
 app.include_router(staff.router)
+
+
+@app.get("/")
+async def root():
+    return RedirectResponse(url="/classes/")
+
 
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")

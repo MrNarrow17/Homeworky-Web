@@ -1,3 +1,8 @@
+# Personal
+scrape.py
+uploads/
+*.db
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -8,7 +13,6 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-uploads/
 build/
 develop-eggs/
 dist/
@@ -58,7 +62,6 @@ cover/
 
 # Django stuff:
 *.log
-*.db
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
