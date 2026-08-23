@@ -104,13 +104,13 @@ class SessionSecurity(GeneralSecurity):
         if not token:
             return
 
-        existing_session = self._lookup_session(self.hash_token(token), db_session)
+        existing_session = self._lookup_session(token, db_session)
 
         if existing_session:
             db_session.delete(existing_session)
             db_session.commit()
 
-        self.delete_session_cookie(response)
+            self.delete_session_cookie(response)
 
     ### Cookies ###
 
