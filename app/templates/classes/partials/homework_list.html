@@ -1,0 +1,99 @@
+<!-- Week Switcher Controls -->
+<div class="surface p-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between gap-2">
+        <button class="btn-ghost px-3 py-2"
+                hx-get="/classes/{{ class_item.id }}/homework/?week={{ current_week - 1 }}"
+                hx-target="#homeworkContainer"
+                hx-swap="innerHTML"
+                hx-push-url="/classes/{{ class_item.id }}/?week={{ current_week - 1 }}"
+                hx-indicator="#weekSpinner">
+            <i class="bi bi-chevron-left"></i>
+            <span class="d-none d-sm-inline">Попередній тиждень</span>
+        </button>
+
+        <div class="text-center position-relative px-2">
+            <div class="week-label">Тиждень {{ current_week }}</div>
+            <div class="week-range">{{ week_start_date }} — {{ week_end_date }}</div>
+
+            <div id="weekSpinner" class="spinner-border spinner-border-sm spinner-warm htmx-indicator position-absolute top-50 start-50 translate-middle" role="status">
+                <span class="visually-hidden">Завантаження...</span>
+            </div>
+        </div>
+
+        <button class="btn-ghost px-3 py-2"
+                hx-get="/classes/{{ class_item.id }}/homework/?week={{ current_week + 1 }}"
+                hx-target="#homeworkContainer"
+                hx-swap="innerHTML"
+                hx-push-url="/classes/{{ class_item.id }}/?week={{ current_week + 1 }}"
+                hx-indicator="#weekSpinner">
+            <span class="d-none d-sm-inline">Наступний тиждень</span>
+            <i class="bi bi-chevron-right"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Homework Feed -->
+<div class="d-flex flex-column gap-3">
+    {% for hw in homework_list %}
+        <div class="hw-card {% if loop.index0 % 4 == 1 %}c2{% elif loop.index0 % 4 == 2 %}c3{% elif loop.index0 % 4 == 3 %}c4{% endif %}">
+            <div class="d-flex justify-content-between align-items-start mb-2 gap-2">
+                <span class="subject-pill">
+                    {{ hw.subject if hw.subject else "Загальне завдання" }}
+                </span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="meta-date">
+                        <i class="bi bi-calendar3"></i>
+                        {{ hw.date.strftime("%d.%m.%Y") if hw.date else "Не вказано" }}
+                    </span>
+                    {% if viewer and viewer.is_staff %}
+                    <div class="d-flex align-items-center ms-2 border-start" style="border-color: var(--line) !important; padding-left: .5rem;">
+                        <a href="/staff/homework/{{ hw.id }}/edit/" class="action-btn-icon" title="Редагувати">
+                            <i class="bi bi-pencil-fill"></i>
+                        </a>
+                        <form method="post" action="/staff/homework/{{ hw.id }}/delete/" onsubmit="return confirm('Видалити це завдання?')" style="margin: 0; padding: 0;">
+                            <button type="submit" class="action-btn-icon danger" title="Видалити">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <h3 class="hw-title">{{ hw.title if hw.title else "Без назви" }}</h3>
+            
+            <div class="hw-desc mt-2">
+                {{ hw.description if hw.description else "Опис відсутній." }}
+            </div>
+
+            {% if hw.images and hw.images|length > 0 %}
+            <div class="hw-divider"></div>
+            <div class="d-flex gap-2 flex-wrap mt-2">
+                {% for img in hw.images %}
+                <img src="{{ img }}" alt="Homework image" class="img-thumb">
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="hw-footer">
+                <span>Додано: {{ hw.created_at.strftime("%d.%m %H:%M") if hw.created_at else "" }}</span>
+            </div>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="icon-wrap"><i class="bi bi-journal-x"></i></div>
+            <h5 class="mb-1" style="font-family:'Fraunces',serif;">Немає завдань</h5>
+            <p class="text-secondary small mb-0" style="color:var(--ink-soft) !important;">
+                На цей тиждень викладач ще нічого не додав.
+            </p>
+        </div>
+    {% endfor %}
+
+    <!-- Add Homework Card (Visible only to staff) -->
+    {% if viewer and viewer.is_staff %}
+    <a href="/staff/homework/new?class_id={{ class_item.id }}" class="add-hw-card mt-2">
+        <i class="bi bi-plus-circle"></i>
+        <span>Додати домашнє завдання</span>
+    </a>
+    {% endif %}
+</div>

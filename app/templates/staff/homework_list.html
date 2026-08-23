@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="uk">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Усі домашні завдання — {{ class_.name }}</title>
+
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+        <style>
+            :root {
+                --paper: #FAF6EE;
+                --card: #FFFFFF;
+                --ink: #221C15;
+                --ink-soft: #746B5C;
+                --ink-faint: #A79E8D;
+                --line: rgba(34, 28, 21, 0.10);
+                --line-strong: rgba(34, 28, 21, 0.18);
+                --accent: #DE5B3A;
+                --accent-dark: #B8451E;
+                --accent-soft: #FBE4DA;
+                --gold: #D69A2D;
+                --gold-soft: #F7E9C9;
+                --sage: #6E8C63;
+                --sage-soft: #E1EAD9;
+                --plum: #8B5A8A;
+                --plum-soft: #EFDFEE;
+                --radius-lg: 20px;
+                --radius-md: 14px;
+                --shadow-sm: 0 1px 3px rgba(34,28,21,0.06);
+                --shadow-md: 0 14px 34px -14px rgba(34,28,21,0.22);
+            }
+
+            body {
+                background-color: var(--paper);
+                background-image: radial-gradient(rgba(34,28,21,0.055) 1px, transparent 1px);
+                background-size: 24px 24px;
+                background-position: -12px -12px;
+                color: var(--ink);
+                font-family: 'Inter', system-ui, -apple-system, sans-serif;
+                min-height: 100vh;
+            }
+
+            ::selection { background: var(--accent); color: #fff; }
+
+            .eyebrow {
+                display: inline-flex; align-items: center; gap: .45rem;
+                font-size: .78rem; letter-spacing: .14em; text-transform: uppercase;
+                color: var(--accent-dark); font-weight: 700; margin-bottom: .5rem;
+            }
+            .eyebrow::before { content: "✦"; }
+
+            .page-title {
+                font-family: 'Fraunces', Georgia, serif;
+                font-weight: 600;
+                font-size: clamp(1.9rem, 3vw + 1rem, 2.9rem);
+                letter-spacing: -0.02em;
+                line-height: 1.1;
+                color: var(--ink);
+                margin: 0;
+            }
+            .page-subtitle { color: var(--ink-soft); font-size: .95rem; }
+
+            .btn-ghost {
+                display: inline-flex; align-items: center; gap: .5rem;
+                background: var(--card);
+                border: 1px solid var(--line);
+                color: var(--ink);
+                font-weight: 600;
+                padding: .6rem 1.1rem;
+                border-radius: 999px;
+                text-decoration: none;
+                transition: all .18s ease;
+                box-shadow: var(--shadow-sm);
+                font-size: .9rem;
+            }
+            .btn-ghost:hover {
+                border-color: rgba(222,91,58,.5); color: var(--accent-dark);
+                transform: translateY(-1px); box-shadow: var(--shadow-md);
+            }
+            
+            .btn-accent {
+                display: inline-flex; align-items: center; gap: .5rem;
+                background: var(--accent);
+                border: 1px solid var(--accent);
+                color: #fff;
+                font-weight: 600;
+                padding: .6rem 1.1rem;
+                border-radius: 999px;
+                text-decoration: none;
+                transition: all .18s ease;
+                box-shadow: 0 8px 20px -6px rgba(222,91,58,.5);
+                font-size: .9rem;
+            }
+            .btn-accent:hover {
+                background: var(--accent-dark); border-color: var(--accent-dark);
+                color: #fff; transform: translateY(-1px);
+            }
+
+            .hw-card {
+                background: var(--card);
+                border: 1px solid var(--line);
+                border-left: 4px solid var(--accent);
+                border-radius: var(--radius-md);
+                padding: 1.5rem;
+                box-shadow: var(--shadow-sm);
+                transition: box-shadow .2s ease, transform .2s ease;
+            }
+            .hw-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+            .hw-card.c2 { border-left-color: var(--gold); }
+            .hw-card.c3 { border-left-color: var(--sage); }
+            .hw-card.c4 { border-left-color: var(--plum); }
+
+            .subject-pill {
+                display: inline-flex; align-items: center; gap: .4rem;
+                font-size: .78rem; font-weight: 700;
+                padding: .35rem .75rem;
+                border-radius: 999px;
+                background: var(--accent-soft); color: var(--accent-dark);
+            }
+            .hw-card.c2 .subject-pill { background: var(--gold-soft); color: #8A6316; }
+            .hw-card.c3 .subject-pill { background: var(--sage-soft); color: #41562F; }
+            .hw-card.c4 .subject-pill { background: var(--plum-soft); color: #63356A; }
+
+            .meta-date {
+                color: var(--ink-faint); font-size: .82rem;
+                display: flex; align-items: center; gap: .35rem;
+            }
+
+            .hw-title {
+                font-family: 'Fraunces', serif;
+                font-weight: 600;
+                font-size: 1.3rem;
+                color: var(--ink);
+                margin: .75rem 0 .5rem;
+            }
+            .hw-desc { color: var(--ink-soft); line-height: 1.65; }
+
+            .img-thumb {
+                max-width: 100px;
+                object-fit: cover;
+                border-radius: 10px; border: 1px solid var(--line);
+                transition: transform .2s ease, box-shadow .2s ease;
+                display: block;
+                cursor: zoom-in;
+            }
+            .img-thumb:hover { 
+                transform: scale(1.06); 
+                box-shadow: 0 8px 20px -6px rgba(34,28,21,0.25);
+            }
+
+            .hw-footer {
+                display: flex; justify-content: space-between; align-items: center;
+                padding-top: .9rem; margin-top: .5rem;
+                border-top: 1px dashed var(--line-strong);
+                font-size: .8rem; color: var(--ink-faint);
+            }
+            .hw-divider { border-top: 1px solid var(--line); padding-top: .9rem; margin-top: .25rem; }
+
+            .empty-state {
+                background: var(--card);
+                border: 1.5px dashed var(--line-strong);
+                border-radius: var(--radius-lg);
+                padding: 3.5rem 2rem;
+                text-align: center;
+            }
+            .empty-state .icon-wrap {
+                width: 62px; height: 62px; border-radius: 50%;
+                background: var(--accent-soft); color: var(--accent-dark);
+                display: inline-flex; align-items: center; justify-content: center;
+                font-size: 1.5rem; margin-bottom: 1rem;
+            }
+            
+            .action-btn-icon {
+                background: transparent; border: none; color: var(--ink-faint);
+                padding: .25rem .35rem; font-size: 1rem; cursor: pointer;
+                transition: color .15s ease;
+            }
+            .action-btn-icon:hover { color: var(--accent-dark); }
+            .action-btn-icon.danger:hover { color: #B8451E; }
+
+            /* Add Homework Card */
+            .add-hw-card {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.75rem;
+                padding: 1.5rem;
+                background: var(--card);
+                border: 2px dashed var(--line-strong);
+                border-radius: var(--radius-md);
+                color: var(--accent-dark);
+                text-decoration: none;
+                font-weight: 700;
+                transition: all .2s ease;
+                box-shadow: var(--shadow-sm);
+            }
+            .add-hw-card:hover {
+                background: var(--accent-soft);
+                border-color: var(--accent);
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-md);
+                color: var(--accent-dark);
+            }
+            .add-hw-card i {
+                font-size: 1.3rem;
+            }
+
+            .id-chip {
+                font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+                font-size: .75rem;
+                background: var(--card);
+                border: 1px solid var(--line);
+                color: var(--ink-soft);
+                padding: .4rem .75rem;
+                border-radius: 999px;
+            }
+
+            /* Lightbox Modal Styles */
+            .modal-backdrop.show { opacity: 0.85; background-color: var(--ink); }
+            #imageLightbox .modal-content {
+                background: transparent;
+                border: none;
+                box-shadow: none;
+            }
+            #lightboxImage {
+                max-height: 85vh;
+                width: auto;
+                max-width: 100%;
+                margin: 0 auto;
+                border-radius: 14px;
+                border: 6px solid var(--card);
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            }
+        </style>
+    </head>
+    <body class="py-4 py-md-5">
+        <div class="container" style="max-width: 900px">
+            <div class="d-flex align-items-center justify-content-between mb-4 gap-2 flex-wrap">
+                <a href="/staff/dashboard/" class="btn-ghost">
+                    <i class="bi bi-arrow-left"></i> До панелі
+                </a>
+                <span class="id-chip">ID класу: #{{ class_.id }}</span>
+            </div>
+
+            <header class="mb-4">
+                <div class="eyebrow">Керування</div>
+                <h1 class="page-title">Усі домашні завдання</h1>
+                <p class="page-subtitle">Клас: {{ class_.name }}</p>
+            </header>
+
+            <!-- Homework Feed -->
+            <div class="d-flex flex-column gap-3">
+                {% for hw in homework_list %}
+                    <div class="hw-card {% if loop.index0 % 4 == 1 %}c2{% elif loop.index0 % 4 == 2 %}c3{% elif loop.index0 % 4 == 3 %}c4{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start mb-2 gap-2">
+                            <span class="subject-pill">
+                                {{ hw.subject if hw.subject else "Загальне завдання" }}
+                            </span>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="meta-date">
+                                    <i class="bi bi-calendar3"></i>
+                                    {{ hw.date.strftime("%d.%m.%Y") if hw.date else "Не вказано" }}
+                                </span>
+                                <div class="d-flex align-items-center ms-2 border-start" style="border-color: var(--line) !important; padding-left: .5rem;">
+                                    <a href="/staff/homework/{{ hw.id }}/edit/" class="action-btn-icon" title="Редагувати">
+                                        <i class="bi bi-pencil-fill"></i>
+                                    </a>
+                                    <form method="post" action="/staff/homework/{{ hw.id }}/delete/" onsubmit="return confirm('Видалити це завдання?')" style="margin: 0; padding: 0;">
+                                        <button type="submit" class="action-btn-icon danger" title="Видалити">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3 class="hw-title">{{ hw.title if hw.title else "Без назви" }}</h3>
+                        
+                        <div class="hw-desc mt-2">
+                            {{ hw.description if hw.description else "Опис відсутній." }}
+                        </div>
+
+                        {% if hw.images and hw.images|length > 0 %}
+                        <div class="hw-divider"></div>
+                        <div class="d-flex gap-2 flex-wrap mt-2">
+                            {% for img in hw.images %}
+                            <img src="{{ img }}" alt="Homework image" class="img-thumb">
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="hw-footer">
+                            <span>Додано: {{ hw.created_at.strftime("%d.%m %H:%M") if hw.created_at else "" }}</span>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="icon-wrap"><i class="bi bi-journal-x"></i></div>
+                        <h5 class="mb-1" style="font-family:'Fraunces',serif;">Поки що порожньо</h5>
+                        <p class="text-secondary small mb-0" style="color:var(--ink-soft) !important;">Ви ще не додали жодного завдання.</p>
+                    </div>
+                {% endfor %}
+
+                <!-- Add Homework Card at the bottom -->
+                <a href="/staff/homework/new?class_id={{ class_.id }}" class="add-hw-card mt-2">
+                    <i class="bi bi-plus-circle"></i>
+                    <span>Додати домашнє завдання</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Lightbox Modal Structure -->
+        <div class="modal fade" id="imageLightbox" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-xl">
+                <div class="modal-content">
+                    <div class="modal-body p-0 position-relative">
+                        <img src="" alt="Expanded image" id="lightboxImage" class="img-fluid">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            // Event delegation: listens for clicks on the document, 
+            // so it works even when HTMX swaps new homework in.
+            document.addEventListener("click", function (e) {
+                const target = e.target;
+                
+                // If the clicked element (or its parent) has the 'img-thumb' class
+                if (target.classList.contains("img-thumb") || target.closest(".img-thumb")) {
+                    e.preventDefault();
+                    
+                    const imgEl = target.classList.contains("img-thumb") ? target : target.closest(".img-thumb");
+                    const imgSrc = imgEl.getAttribute("src");
+                    const imgAlt = imgEl.getAttribute("alt");
+                    
+                    const lightboxImage = document.getElementById("lightboxImage");
+                    lightboxImage.setAttribute("src", imgSrc);
+                    lightboxImage.setAttribute("alt", imgAlt);
+                    
+                    const lightboxModal = new bootstrap.Modal(document.getElementById('imageLightbox'));
+                    lightboxModal.show();
+                }
+            });
+        </script>
+    </body>
+</html>

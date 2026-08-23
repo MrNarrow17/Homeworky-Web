@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="uk">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Доступні класи</title>
+
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+        <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+        <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
+
+        <style>
+            :root {
+                --paper: #FAF6EE;
+                --card: #FFFFFF;
+                --ink: #221C15;
+                --ink-soft: #746B5C;
+                --ink-faint: #A79E8D;
+                --line: rgba(34, 28, 21, 0.10);
+                --line-strong: rgba(34, 28, 21, 0.18);
+                --accent: #DE5B3A;
+                --accent-dark: #B8451E;
+                --accent-soft: #FBE4DA;
+                --gold: #D69A2D;
+                --gold-soft: #F7E9C9;
+                --sage: #6E8C63;
+                --sage-soft: #E1EAD9;
+                --plum: #8B5A8A;
+                --plum-soft: #EFDFEE;
+                --radius-lg: 20px;
+                --radius-md: 14px;
+                --shadow-sm: 0 1px 3px rgba(34,28,21,0.06);
+                --shadow-md: 0 14px 34px -14px rgba(34,28,21,0.22);
+            }
+
+            * { -webkit-tap-highlight-color: transparent; }
+
+            body {
+                background-color: var(--paper);
+                background-image: radial-gradient(rgba(34,28,21,0.055) 1px, transparent 1px);
+                background-size: 24px 24px;
+                background-position: -12px -12px;
+                color: var(--ink);
+                font-family: 'Inter', system-ui, -apple-system, sans-serif;
+                min-height: 100vh;
+            }
+
+            ::selection { background: var(--accent); color: #fff; }
+
+            .topbar {
+                display: flex;
+                justify-content: flex-end;
+                margin-bottom: 2rem;
+            }
+
+            .btn-ghost {
+                display: inline-flex; align-items: center; gap: .5rem;
+                background: var(--card);
+                border: 1px solid var(--line);
+                color: var(--ink);
+                font-weight: 600;
+                padding: .55rem 1.1rem;
+                border-radius: 999px;
+                text-decoration: none;
+                transition: all .18s ease;
+                box-shadow: var(--shadow-sm);
+                font-size: .88rem;
+            }
+            .btn-ghost:hover {
+                border-color: rgba(222,91,58,.5); color: var(--accent-dark);
+                transform: translateY(-1px); box-shadow: var(--shadow-md);
+            }
+
+            .eyebrow {
+                display: inline-flex; align-items: center; gap: .45rem;
+                font-size: .78rem; letter-spacing: .14em; text-transform: uppercase;
+                color: var(--accent-dark); font-weight: 700; margin-bottom: .5rem;
+            }
+            .eyebrow::before { content: "✦"; }
+
+            .page-title {
+                font-family: 'Fraunces', Georgia, serif;
+                font-weight: 600;
+                font-size: clamp(2.1rem, 3vw + 1.2rem, 3.2rem);
+                letter-spacing: -0.02em;
+                line-height: 1.05;
+                color: var(--ink);
+            }
+            .page-subtitle { color: var(--ink-soft); font-size: 1.02rem; }
+
+            .search-wrap { position: relative; }
+            .search-icon {
+                position: absolute; left: 1.2rem; top: 50%; transform: translateY(-50%);
+                color: var(--ink-faint); font-size: 1.05rem; pointer-events: none;
+            }
+            .search-input {
+                width: 100%;
+                padding: 1rem 1.25rem 1rem 3.2rem;
+                border-radius: 999px;
+                border: 1.5px solid var(--line);
+                background: var(--card);
+                font-size: 1rem;
+                color: var(--ink);
+                box-shadow: var(--shadow-sm);
+                transition: all .18s ease;
+            }
+            .search-input::placeholder { color: var(--ink-faint); }
+            .search-input:focus {
+                outline: none; border-color: var(--accent);
+                box-shadow: 0 0 0 4px var(--accent-soft);
+            }
+
+            .class-card {
+                background: var(--card);
+                border: 1px solid var(--line);
+                border-radius: var(--radius-lg);
+                padding: 1.35rem 1.5rem;
+                display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+                cursor: pointer;
+                box-shadow: var(--shadow-sm);
+                transition: all .2s ease;
+                height: 100%;
+            }
+            .class-card:hover {
+                border-color: rgba(222, 91, 58, .45);
+                box-shadow: var(--shadow-md);
+                transform: translateY(-3px);
+            }
+
+            .avatar-badge {
+                width: 52px; height: 52px; border-radius: 15px;
+                display: flex; align-items: center; justify-content: center;
+                font-family: 'Fraunces', serif; font-weight: 700; font-size: 1.3rem;
+                background: var(--accent-soft); color: var(--accent-dark);
+                flex: 0 0 auto;
+            }
+            .class-card-col:nth-child(4n+2) .avatar-badge { background: var(--gold-soft); color: #8A6316; }
+            .class-card-col:nth-child(4n+3) .avatar-badge { background: var(--sage-soft); color: #41562F; }
+            .class-card-col:nth-child(4n+4) .avatar-badge { background: var(--plum-soft); color: #63356A; }
+
+            .class-name { font-weight: 700; color: var(--ink); margin-bottom: .25rem; }
+            .id-chip {
+                font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+                font-size: .72rem;
+                background: var(--paper);
+                border: 1px solid var(--line);
+                color: var(--ink-soft);
+                padding: .25rem .6rem;
+                border-radius: 999px;
+                display: inline-block;
+            }
+            .lock-icon { color: var(--ink-faint); font-size: 1.15rem; }
+
+            .empty-state {
+                background: var(--card);
+                border: 1.5px dashed var(--line-strong);
+                border-radius: var(--radius-lg);
+                padding: 3.5rem 2rem;
+                text-align: center;
+                width: 100%;
+            }
+            .empty-state .icon-wrap {
+                width: 62px; height: 62px; border-radius: 50%;
+                background: var(--accent-soft); color: var(--accent-dark);
+                display: inline-flex; align-items: center; justify-content: center;
+                font-size: 1.5rem; margin-bottom: 1rem;
+            }
+
+            /* Modal */
+            .modal-content.warm-modal {
+                background: var(--paper);
+                border: 1px solid var(--line);
+                border-radius: 22px;
+                box-shadow: 0 30px 70px -20px rgba(34,28,21,.35);
+            }
+            .modal-title-warm {
+                font-family: 'Fraunces', serif;
+                font-weight: 600;
+                font-size: 1.3rem;
+                color: var(--ink);
+                display: flex; align-items: center; gap: .55rem;
+            }
+            .field-label {
+                font-size: .78rem; text-transform: uppercase; letter-spacing: .08em;
+                color: var(--ink-soft); font-weight: 700; margin-bottom: .4rem; display: block;
+            }
+            .field-wrap { position: relative; }
+            .field-icon {
+                position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
+                color: var(--ink-faint);
+            }
+            .field-input {
+                width: 100%;
+                padding: .8rem 1rem .8rem 2.7rem;
+                border-radius: 12px;
+                border: 1.5px solid var(--line);
+                background: #fff;
+                color: var(--ink);
+                transition: all .18s ease;
+            }
+            .field-input:focus {
+                outline: none; border-color: var(--accent);
+                box-shadow: 0 0 0 4px var(--accent-soft);
+            }
+
+            .btn-warm {
+                display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+                background: var(--accent);
+                border: none;
+                color: #fff;
+                font-weight: 700;
+                padding: .75rem 1.4rem;
+                border-radius: 999px;
+                box-shadow: 0 10px 24px -8px rgba(222,91,58,.55);
+                transition: all .18s ease;
+                width: 100%;
+            }
+            .btn-warm:hover { background: var(--accent-dark); transform: translateY(-1px); color: #fff; }
+            .btn-warm:active { transform: translateY(0); }
+
+            .join-alert {
+                display: flex; align-items: center;
+                padding: .65rem .9rem;
+                border-radius: 12px;
+                font-size: .85rem;
+                font-weight: 500;
+            }
+            .join-alert--success { background: #EAF4EA; border: 1px solid #BEE0BE; color: #2F6B3A; }
+            .join-alert--error { background: #FCEAE6; border: 1px solid #F0BBAC; color: #9C3A22; }
+
+            .btn-close-warm { filter: none; opacity: .5; }
+            .btn-close-warm:hover { opacity: .9; }
+        </style>
+    </head>
+    <body class="py-4 py-md-5">
+        <div class="container" style="max-width: 900px">
+            
+            <!-- Top Right Navigation -->
+            <div class="topbar">
+                <a href="/staff/login/" class="btn-ghost">
+                    <i class="bi bi-shield-lock"></i> Вхід для модератора
+                </a>
+            </div>
+
+            <header class="text-center mb-5">
+                <div class="eyebrow justify-content-center d-flex">Спільноти</div>
+                <h1 class="page-title mb-2">Зайди в пашину мамку</h1>
+                <p class="page-subtitle">Обери клас зі списку та переглянь домашні завдання за тиждень</p>
+            </header>
+
+            <!-- Search Bar -->
+            <div class="row justify-content-center mb-4">
+                <div class="col-12 col-md-8">
+                    <div class="search-wrap">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" id="searchInput" class="search-input" placeholder="Шукай клас за назвою" autocomplete="off" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Class List Container -->
+            <div class="row g-3" id="classList">
+                {% for class_item in classes %}
+                <div class="col-12 col-md-6 class-card-col" data-class-name="{{ class_item.name }}">
+                    <div class="class-card"
+                         data-bs-toggle="modal"
+                         data-bs-target="#passwordModal"
+                         data-class-id="{{ class_item.id }}"
+                         data-class-name="{{ class_item.name }}"
+                         role="button">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="avatar-badge">{{ class_item.name|first|upper }}</div>
+                            <div>
+                                <h5 class="class-name mb-1">{{ class_item.name }}</h5>
+                                <span class="id-chip">ID #{{ class_item.id }}</span>
+                            </div>
+                        </div>
+                        <i class="bi bi-lock-fill lock-icon"></i>
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="icon-wrap"><i class="bi bi-inbox"></i></div>
+                    <h5 class="mb-1" style="font-family:'Fraunces',serif;">Тут поки що порожньо</h5>
+                    <p class="text-secondary small mb-0" style="color:var(--ink-soft) !important;">Немає доступних класів.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Password Modal -->
+        <div class="modal fade" id="passwordModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content warm-modal shadow-lg">
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="modal-title-warm">
+                            <i class="bi bi-shield-lock" style="color: var(--accent)"></i>
+                            Приєднатися до <span id="modalClassName" style="color: var(--accent-dark); margin-left: 0.3rem;"></span>
+                        </h5>
+                        <button type="button" class="btn-close btn-close-warm" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <!-- form points to /classes/join/ with JSON encoding matching ClassJoin schema -->
+                    <form id="joinForm" hx-post="/classes/join/" hx-ext="json-enc" hx-swap="none" class="modal-body pt-3">
+                        <input type="hidden" id="classIdInput" name="id">
+
+                        <div class="mb-3">
+                            <label for="passwordInput" class="field-label">Пароль</label>
+                            <div class="field-wrap">
+                                <i class="bi bi-key field-icon"></i>
+                                <input type="password" class="field-input" id="passwordInput" name="password" autocomplete="current-password" placeholder="Введіть пароль класу" required>
+                            </div>
+                        </div>
+
+                        <div id="joinResponse" class="mb-2"></div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn-warm">Доєднатися</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            // Live Search Filter
+            document.getElementById("searchInput").addEventListener("input", function (e) {
+                const query = e.target.value.toLowerCase().trim();
+                document.querySelectorAll(".class-card-col").forEach((card) => {
+                    const className = card.getAttribute("data-class-name").toLowerCase();
+                    card.style.display = className.includes(query) ? "" : "none";
+                });
+            });
+        
+            // Populate Modal Data
+            const passwordModal = document.getElementById('passwordModal');
+            if (passwordModal) {
+                passwordModal.addEventListener('show.bs.modal', function(event) {
+                    const button = event.relatedTarget;
+                    const classId = button.getAttribute('data-class-id');
+                    const className = button.getAttribute('data-class-name');
+        
+                    document.getElementById('modalClassName').textContent = className;
+                    document.getElementById('classIdInput').value = classId;
+                    document.getElementById('passwordInput').value = '';
+                    document.getElementById('joinResponse').innerHTML = '';
+                });
+            }
+        
+            // Handle HTMX Response
+            document.addEventListener("htmx:afterRequest", function (evt) {
+                if (evt.detail.elt.getAttribute('id') !== 'joinForm') {
+                    return;
+                }
+        
+                const xhr = evt.detail.xhr;
+                const responseBox = document.getElementById("joinResponse");
+        
+                if (evt.detail.successful) {
+                    let redirectId = document.getElementById('classIdInput').value; 
+                    
+                    try {
+                        const responseData = typeof xhr.response === "string" ? JSON.parse(xhr.response) : xhr.response;
+                        if (responseData && responseData.id) {
+                            redirectId = responseData.id;
+                        }
+                    } catch (e) {
+                        console.error("Не вдалося розпарсити JSON:", e);
+                    }
+        
+                    responseBox.innerHTML = `
+                        <div class="join-alert join-alert--success">
+                            <i class="bi bi-check-circle-fill me-2"></i> Успішно! Перенаправлення...
+                        </div>`;
+                        
+                    setTimeout(() => {
+                        // Added trailing slash to match new router paths
+                        window.location.href = `/classes/${redirectId}/`;
+                    }, 1200);
+        
+                } else {
+                    let errorMsg = "Неправильний пароль або виникла помилка.";
+                    
+                    try {
+                        const errorData = typeof xhr.response === "string" ? JSON.parse(xhr.response) : xhr.response;
+                        
+                        if (typeof errorData.detail === "string") {
+                            errorMsg = errorData.detail;
+                        } else if (Array.isArray(errorData.detail) && errorData.detail.length > 0) {
+                            errorMsg = `Помилка: ${errorData.detail[0].msg}`;
+                        }
+                    } catch (e) {
+                        if (xhr.status === 422) {
+                            errorMsg = "Помилка формату даних (перевірте поля).";
+                        } else if (xhr.status >= 500) {
+                            errorMsg = "Помилка сервера. Спробуйте пізніше.";
+                        }
+                    }
+        
+                    responseBox.innerHTML = `
+                        <div class="join-alert join-alert--error">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> ${errorMsg}
+                        </div>`;
+                }
+            });
+        </script>
+    </body>
+</html>
