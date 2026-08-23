@@ -1,8 +1,8 @@
 # Personal
 scrape.py
-uploads/
 *.db
 .fastapicloud
+uploads/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
