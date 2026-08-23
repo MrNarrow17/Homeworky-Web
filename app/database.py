@@ -6,6 +6,8 @@ settings = get_settings()
 
 engine = create_engine(
     settings.database_url.get_secret_value(),
+    pool_pre_ping=True,
+    pool_recycle=1800,
     echo=settings.debug_mode,
 )
 

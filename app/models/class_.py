@@ -20,3 +20,6 @@ class Class(ClassBase, table=True):
     staff: list["StaffMember"] = Relationship(back_populates="class_")
     homeworks: list["Homework"] = Relationship(back_populates="class_")
     sessions: list["ClassSession"] = Relationship(back_populates="class_")
+
+    def __str__(self):
+        return self.name

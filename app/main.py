@@ -8,10 +8,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from sqladmin import Admin
 from starlette.middleware.sessions import SessionMiddleware
 
+from app.admin import AdminAuth, ClassAdmin, StaffAdmin
 from app.config import get_settings
-from app.database import init_db
+from app.database import engine, init_db
 from app.routers import classes, staff
 
 settings = get_settings()
@@ -25,25 +27,26 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="My FastAPI App", version="1.0.0", lifespan=lifespan)
 
-app.add_middleware(SessionMiddleware, secret_key=settings.token_secret)
+authentication_backend = AdminAuth(secret_key=settings.token_secret)
+admin = Admin(app, engine, authentication_backend=authentication_backend)
 
-origins = ["http://localhost:5173"]
+app.add_middleware(SessionMiddleware, secret_key=settings.token_secret)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 app.include_router(classes.router, prefix="/classes")
 app.include_router(staff.router)
+
+admin.add_view(ClassAdmin)
+admin.add_view(StaffAdmin)
 
 
 @app.get("/")
 async def root():
     return RedirectResponse(url="/classes/")
-
-
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
