@@ -5,7 +5,7 @@ load_dotenv()
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqladmin import Admin
@@ -50,3 +50,8 @@ admin.add_view(StaffAdmin)
 @app.get("/")
 async def root():
     return RedirectResponse(url="/classes/")
+
+
+@app.head("/")
+async def root_head():
+    return Response(status_code=200)
