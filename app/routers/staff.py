@@ -18,12 +18,16 @@ from sqlmodel import Session, col, func, select
 from app.config import get_settings
 from app.database import get_session
 from app.models.homework import Homework
-from app.models.sessions import SessionType, StaffSession
 from app.models.staff import StaffMember
 from app.schemas.class_ import ClassPublic
 from app.schemas.homework import HomeworkForm
+from app.schemas.sessions import ViewerContext
 from app.schemas.staff import LoginRequest, LoginResponse
-from app.security import get_class_security, get_general_security, get_staff_security
+from app.security import (
+    get_general_security,
+    get_staff_security,
+    get_viewer_dependencies,
+)
 from app.tools.time_tools import get_week_range
 
 router = APIRouter(prefix="/staff", tags=["Staff"])
@@ -32,7 +36,7 @@ templates = Jinja2Templates(directory="app/templates/staff")
 settings = get_settings()
 general_security = get_general_security()
 staff_security = get_staff_security()
-class_security = get_class_security()
+viewer_deps = get_viewer_dependencies()
 
 
 @router.get("/login/", response_class=HTMLResponse)
@@ -50,7 +54,6 @@ async def staff_login(request: Request):
 @router.post("/login/", response_model=LoginResponse)
 async def staff_login_post(
     credentials: LoginRequest,
-    request: Request,
     response: Response,
     db_session: Session = Depends(get_session),
 ):
@@ -70,18 +73,13 @@ async def staff_login_post(
     ):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    class_security.invalidate_session(request, response, db_session)
-    staff_security.issue_session(
-        response, SessionType.STAFF, staff_member.id, db_session
-    )
+    staff_security.issue_session(response, staff_member.id, db_session)
 
     return LoginResponse(redirect_url="/staff/dashboard")
 
 
 @router.get("/logout/", response_class=RedirectResponse)
-async def staff_logout(
-    request: Request, response: Response, db_session: Session = Depends(get_session)
-):
+async def staff_logout(request: Request, db_session: Session = Depends(get_session)):
     """
     An endpoint for logging out of a staff member account.
 
@@ -97,7 +95,7 @@ async def staff_logout(
 @router.get("/dashboard/", response_class=HTMLResponse)
 async def staff_dashboard(
     request: Request,
-    staff_session: StaffSession = Depends(staff_security.require_session),
+    viewer: ViewerContext = Depends(viewer_deps.require_staff),
     db_session: Session = Depends(get_session),
 ):
     """
@@ -109,13 +107,12 @@ async def staff_dashboard(
         - 403: Wrong session type.
     """
 
-    settings = get_settings()
     now = settings.current_time
     current_year, current_week, _ = now.isocalendar()
 
     start_date, end_date = get_week_range(current_year, current_week)
 
-    staff_member = staff_session.staff_member
+    staff_member = viewer.staff_member_verified
 
     homework_count = db_session.exec(
         select(func.count(Homework.id)).where(
@@ -127,7 +124,7 @@ async def staff_dashboard(
         select(func.count(Homework.id)).where(
             Homework.class_id == staff_member.class_id,
             Homework.date >= start_date,
-            Homework.date < end_date,
+            Homework.date <= end_date,
         )
     ).one()
 
@@ -147,7 +144,7 @@ async def staff_dashboard(
 @router.get("/homework/", response_class=HTMLResponse)
 async def staff_homework(
     request: Request,
-    staff_session: StaffSession = Depends(staff_security.require_session),
+    viewer: ViewerContext = Depends(viewer_deps.require_staff),
     db_session: Session = Depends(get_session),
 ):
     """
@@ -159,7 +156,7 @@ async def staff_homework(
         - 403: Wrong session type.
     """
 
-    staff_member = staff_session.staff_member
+    staff_member = viewer.staff_member_verified
     statement = (
         select(Homework)
         .where(Homework.class_id == staff_member.class_id)
@@ -181,8 +178,7 @@ async def staff_homework(
 @router.get("/homework/new/", response_class=HTMLResponse)
 async def get_homework_form(
     request: Request,
-    class_id: int,
-    staff_session: StaffSession = Depends(staff_security.require_session),
+    viewer: ViewerContext = Depends(viewer_deps.require_staff),
 ):
     """
     An endpoint for displaying the homework form.
@@ -190,12 +186,9 @@ async def get_homework_form(
     Responses:
         - 200: HTML response with the homework form.
         - 401: Unauthorized.
-        - 403: Wrong session type.
+        - 403: Wrong class.
     """
-
-    if staff_session.staff_member.class_id != class_id:
-        raise HTTPException(status_code=403, detail="Forbidden")
-
+    class_id = viewer.class_id
     return templates.TemplateResponse(
         request=request,
         name="homework_form.html",
@@ -207,8 +200,8 @@ async def get_homework_form(
 async def post_homework_form(
     request: Request,
     form: Annotated[HomeworkForm, Form()],
-    staff_session: StaffSession = Depends(staff_security.require_session),
-    session: Session = Depends(get_session),
+    viewer: ViewerContext = Depends(viewer_deps.require_staff),
+    db_session: Session = Depends(get_session),
 ):
     """
     An endpoint for submitting a new homework form.
@@ -219,7 +212,7 @@ async def post_homework_form(
         - 403: Wrong session type.
     """
 
-    staff_member = staff_session.staff_member
+    staff_member = viewer.staff_member_verified
     class_id = staff_member.class_id
 
     form_data = await request.form()
@@ -248,8 +241,8 @@ async def post_homework_form(
         images=image_paths,
         created_by=staff_member.username,
     )
-    session.add(new_homework)
-    session.commit()
+    db_session.add(new_homework)
+    db_session.commit()
 
     return RedirectResponse(url="/staff/dashboard/", status_code=303)
 
@@ -258,8 +251,8 @@ async def post_homework_form(
 async def get_edit_homework_form(
     request: Request,
     homework_id: int,
-    staff_session: StaffSession = Depends(staff_security.require_session),
-    session: Session = Depends(get_session),
+    viewer: ViewerContext = Depends(viewer_deps.require_staff),
+    db_session: Session = Depends(get_session),
 ):
     """
     An endpoint for displaying the homework form for editing.
@@ -270,11 +263,11 @@ async def get_edit_homework_form(
         - 403: Wrong session type.
     """
 
-    homework = session.get(Homework, homework_id)
+    homework = db_session.get(Homework, homework_id)
     if not homework:
         raise HTTPException(status_code=404, detail="Homework not found")
 
-    if homework.class_id != staff_session.staff_member.class_id:
+    if homework.class_id != viewer.staff_member_verified.class_id:
         raise HTTPException(status_code=403, detail="Forbidden")
 
     return templates.TemplateResponse(
@@ -289,8 +282,8 @@ async def post_edit_homework_form(
     request: Request,
     homework_id: int,
     form: Annotated[HomeworkForm, Form()],
-    staff_session: StaffSession = Depends(staff_security.require_session),
-    session: Session = Depends(get_session),
+    viewer: ViewerContext = Depends(viewer_deps.require_staff),
+    db_session: Session = Depends(get_session),
 ):
     """
     An endpoint for submitting an edited homework form.
@@ -301,11 +294,11 @@ async def post_edit_homework_form(
         - 403: Wrong session type.
     """
 
-    homework = session.get(Homework, homework_id)
+    homework = db_session.get(Homework, homework_id)
     if not homework:
         raise HTTPException(status_code=404, detail="Homework not found")
 
-    if homework.class_id != staff_session.staff_member.class_id:
+    if homework.class_id != viewer.staff_member_verified.class_id:
         raise HTTPException(status_code=403, detail="Forbidden")
 
     form_data = await request.form()
@@ -333,18 +326,17 @@ async def post_edit_homework_form(
     homework.date = form.date
     homework.images = image_paths
 
-    session.add(homework)
-    session.commit()
+    db_session.add(homework)
+    db_session.commit()
 
     return RedirectResponse(url="/staff/dashboard/", status_code=303)
 
 
 @router.post("/homework/{homework_id}/delete")
 async def delete_homework(
-    request: Request,
     homework_id: int,
-    staff_session: StaffSession = Depends(staff_security.require_session),
-    session: Session = Depends(get_session),
+    viewer: ViewerContext = Depends(viewer_deps.require_staff),
+    db_session: Session = Depends(get_session),
 ):
     """
     An endpoint for deleting a homework.
@@ -355,15 +347,15 @@ async def delete_homework(
         - 403: Wrong session type.
     """
 
-    homework = session.get(Homework, homework_id)
+    homework = db_session.get(Homework, homework_id)
     if not homework:
         raise HTTPException(status_code=404, detail="Homework not found")
 
-    staff_member = staff_session.staff_member
+    staff_member = viewer.staff_member_verified
     if staff_member.class_id != homework.class_id:
         raise HTTPException(status_code=403, detail="Forbidden")
 
-    session.delete(homework)
-    session.commit()
+    db_session.delete(homework)
+    db_session.commit()
 
     return RedirectResponse(url="/staff/dashboard/", status_code=303)

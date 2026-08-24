@@ -25,7 +25,12 @@ class Settings(BaseSettings):
     staff_session_lifetime: int = Field(
         default=315360000, validation_alias="STAFF_SESSION_LIFETIME"
     )
-    session_cookie: str = Field(default="", validation_alias="SESSION_COOKIE")
+    class_session_cookie: str = Field(
+        default="", validation_alias="CLASS_SESSION_COOKIE"
+    )
+    staff_session_cookie: str = Field(
+        default="", validation_alias="STAFF_SESSION_COOKIE"
+    )
     admin_username: str = Field(default="admin", validation_alias="ADMIN_USERNAME")
     admin_password: str = Field(default="admin", validation_alias="ADMIN_PASSWORD")
 

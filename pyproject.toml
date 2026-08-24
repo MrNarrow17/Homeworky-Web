@@ -18,6 +18,7 @@ dependencies = [
     "itsdangerous",
     "bcrypt",
     "uvicorn",
+    "python-json-logger",
 ]
 
 [tool.setuptools]

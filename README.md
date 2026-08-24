@@ -15,7 +15,7 @@ A lightweight homework-tracking web app for a school class. Students join with a
 - [FastAPI](https://fastapi.tiangolo.com/) + [SQLModel](https://sqlmodel.tiangolo.com/) for the backend and ORM
 - [Alembic](https://alembic.sqlalchemy.org/) for database migrations
 - Jinja2 + [HTMX](https://htmx.org/) + Bootstrap for server-rendered UI
-- [SQLAdmin](https://aminalaee.dev/sqladmin/) for the admin panel
+- [SQLAdmin](https://smithyhq.github.io/sqladmin/) for the admin panel
 - PostgreSQL or SQLite, depending on `DATABASE_URL`
 - [uv](https://docs.astral.sh/uv/) for dependency management
 
@@ -32,7 +32,7 @@ app/
   schemas/        Request/response models
   routers/
     classes.py    Student-facing routes (join class, view homework)
-    staff.py      Teacher-facing routes (login, manage homework)
+    staff.py      Staff-facing routes (login, manage homework)
   templates/      Jinja2 templates
   tools/          Small helpers (ISO week-range calculation)
 alembic/          Database migrations

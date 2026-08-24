@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from enum import Enum
 from typing import TYPE_CHECKING
 
 from sqlmodel import Field, Relationship, SQLModel
@@ -17,20 +16,22 @@ type AppSessionModel = type[AppSession]
 settings = get_settings()
 
 
-class ClassSession(SQLModel, table=True):
+class BaseAppSession(SQLModel):
+    """
+    Represents a base app session model.
+    """
+
+    id: int | None = Field(default=None, primary_key=True)
+    token_hash: str = Field(index=True)
+
+
+class ClassSession(BaseAppSession, table=True):
     """
     Represents a class session table in the database.
 
     Relationships:
         - Class: Many-to-one relationship.
     """
-
-    id: int | None = Field(
-        default=None,
-        primary_key=True,
-    )
-
-    token_hash: str = Field(index=True)
 
     class_: Class = Relationship(back_populates="sessions")
     class_id: int = Field(
@@ -45,11 +46,25 @@ class ClassSession(SQLModel, table=True):
         return cls(token_hash=token_hash, class_id=entity_id)
 
     @property
-    def session_type(self) -> SessionType:
+    def is_staff(self) -> bool:
         """
-        Returns the session type for this session. Used for polymorphic relationship.
+        Returns whether the session is a staff session.
         """
-        return SessionType.CLASS
+        return False
+
+    @property
+    def staff_member(self) -> StaffMember | None:
+        """
+        Returns the staff member associated with this session, if any.
+        """
+        return None
+
+    @property
+    def staff_member_id(self) -> int | None:
+        """
+        Returns the ID of the staff member associated with this session, if any.
+        """
+        return None
 
     def __str__(self) -> str:
         """
@@ -58,20 +73,13 @@ class ClassSession(SQLModel, table=True):
         return f"Session #{self.id}"
 
 
-class StaffSession(SQLModel, table=True):
+class StaffSession(BaseAppSession, table=True):
     """
     Represents a staff session table in the database.
 
     Relationships:
         - StaffMember: Many-to-one relationship.
     """
-
-    id: int | None = Field(
-        default=None,
-        primary_key=True,
-    )
-
-    token_hash: str = Field(index=True)
 
     staff_member: StaffMember = Relationship(back_populates="sessions")
     staff_member_id: int = Field(
@@ -81,50 +89,33 @@ class StaffSession(SQLModel, table=True):
     @classmethod
     def from_entity(cls, token_hash: str, entity_id: int) -> StaffSession:
         """
-        Creates a ClassSession from an entity ID. Used for a polymorphic relationship
+        Creates a StaffSession from an entity ID. Used for a polymorphic relationship
         """
         return cls(token_hash=token_hash, staff_member_id=entity_id)
 
     @property
+    def is_staff(self) -> bool:
+        """
+        Returns whether the session is a staff session.
+        """
+        return True
+
+    @property
     def class_(self) -> Class:
         """
-        Returns the class associated with this staff session.
+        Returns the class of the staff member.
         """
         return self.staff_member.class_
 
     @property
     def class_id(self) -> int:
         """
-        Returns the class ID associated with this staff session.
+        Returns the class ID of the staff member.
         """
         return self.staff_member.class_id
-
-    @property
-    def session_type(self) -> SessionType:
-        """
-        Returns the session type for this session. Used for polymorphic relationship.
-        """
-        return SessionType.STAFF
 
     def __str__(self) -> str:
         """
         Represents the string version of the StaffSession model.
         """
         return f"Session #{self.id}"
-
-
-class SessionType(Enum):
-    STAFF = (StaffSession, settings.staff_session_lifetime)
-    CLASS = (ClassSession, settings.class_session_lifetime)
-
-    def __init__(self, session_model: AppSessionModel, lifetime: int) -> None:
-        self._session_model = session_model
-        self._lifetime = lifetime
-
-    @property
-    def session_model(self) -> AppSessionModel:
-        return self._session_model
-
-    @property
-    def lifetime(self) -> int:
-        return self._lifetime

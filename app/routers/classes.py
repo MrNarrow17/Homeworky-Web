@@ -8,15 +8,15 @@ from app.config import get_settings
 from app.database import get_session
 from app.models.class_ import Class
 from app.models.homework import Homework
-from app.models.sessions import SessionType
 from app.schemas.class_ import ClassJoin, ClassPublic
 from app.schemas.sessions import ViewerContext
-from app.security import get_class_security
+from app.security import get_class_security, get_viewer_dependencies
 from app.tools.time_tools import get_week_range
 
 router = APIRouter(prefix="", tags=["Classes"])
 templates = Jinja2Templates(directory="app/templates/classes")
 
+viewer_deps = get_viewer_dependencies()
 class_security = get_class_security()
 settings = get_settings()
 
@@ -24,8 +24,8 @@ settings = get_settings()
 @router.get("/", response_class=HTMLResponse)
 async def get_classes(
     request: Request,
-    session: Session = Depends(get_session),
-    context: ViewerContext | None = Depends(class_security.get_view_context),
+    db_session: Session = Depends(get_session),
+    context: ViewerContext | None = Depends(viewer_deps.get_viewer_context),
 ):
     """
     An endpoint representing the class browser.
@@ -41,7 +41,7 @@ async def get_classes(
             else f"/classes/{context.class_id}"
         )
 
-    db_classes = session.exec(select(Class)).all()
+    db_classes = db_session.exec(select(Class)).all()
     safe_classes = [ClassPublic.model_validate(c) for c in db_classes]
     return templates.TemplateResponse(
         request=request, name="classes.html", context={"classes": safe_classes}
@@ -73,15 +73,13 @@ async def join_class(
         raise HTTPException(status_code=401, detail="Wrong password")
 
     class_security.invalidate_session(request, response, db_session)
-    class_security.issue_session(response, SessionType.CLASS, db_class.id, db_session)
+    class_security.issue_session(response, db_class.id, db_session)
 
     return db_class
 
 
 @router.get("/exit/")
-def logout(
-    request: Request, response: Response, db_session: Session = Depends(get_session)
-):
+def logout(request: Request, db_session: Session = Depends(get_session)):
     """
     An endpoint for logging out of the class.
 
@@ -100,7 +98,7 @@ async def get_class(
     class_id: int,
     week: int | None = None,
     db_session: Session = Depends(get_session),
-    viewer: ViewerContext = Depends(class_security.require_session),
+    viewer: ViewerContext = Depends(viewer_deps.require_class_any),
 ):
     """
     An endpoint for viewing a class.
@@ -134,7 +132,6 @@ async def get_class(
         request=request,
         name="class_details.html",
         context={
-            "request": request,
             "class_item": ClassPublic.model_validate(db_class),
             "homework_list": homework_list,
             "current_week": selected_week,
@@ -150,8 +147,8 @@ def get_homework_for_week(
     request: Request,
     class_id: int,
     week: int = Query(...),
-    session: Session = Depends(get_session),
-    viewer: ViewerContext = Depends(class_security.require_session),
+    db_session: Session = Depends(get_session),
+    viewer: ViewerContext = Depends(viewer_deps.require_class_any),
 ):
     """
     An endpoint for viewing homework for a specific week.
@@ -163,7 +160,7 @@ def get_homework_for_week(
         - 404: Class not found.
     """
 
-    db_class = session.get(Class, class_id)
+    db_class = db_session.get(Class, class_id)
     if not db_class:
         raise HTTPException(status_code=404, detail="Class not found")
 
@@ -179,13 +176,12 @@ def get_homework_for_week(
         .where(Homework.date <= end_date)
         .order_by(col(Homework.date))
     )
-    homework_list = session.exec(statement).all()
+    homework_list = db_session.exec(statement).all()
 
     return templates.TemplateResponse(
         request=request,
         name="partials/homework_list.html",
         context={
-            "request": request,
             "class_item": ClassPublic.model_validate(db_class),
             "homework_list": homework_list,
             "current_week": week,
