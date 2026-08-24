@@ -20,5 +20,8 @@ dependencies = [
     "uvicorn",
 ]
 
+[tool.setuptools]
+packages = ["app"]
+
 [tool.fastapi]
 entrypoint = "app.main:app"
