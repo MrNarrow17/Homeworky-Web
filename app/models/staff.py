@@ -28,3 +28,6 @@ class StaffMember(SQLModel, table=True):
             "cascade": "all, delete-orphan",
         },
     )
+
+    def __str__(self) -> str:
+        return self.username

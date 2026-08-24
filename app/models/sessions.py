@@ -38,6 +38,9 @@ class ClassSession(SQLModel, table=True):
     def session_type(self) -> SessionType:
         return SessionType.CLASS
 
+    def __str__(self) -> str:
+        return f"Session #{self.id}"
+
 
 class StaffSession(SQLModel, table=True):
     id: int | None = Field(
@@ -67,6 +70,9 @@ class StaffSession(SQLModel, table=True):
     @property
     def session_type(self) -> SessionType:
         return SessionType.STAFF
+
+    def __str__(self) -> str:
+        return f"Session #{self.id}"
 
 
 class SessionType(Enum):

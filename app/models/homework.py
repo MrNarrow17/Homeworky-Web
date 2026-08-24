@@ -25,3 +25,6 @@ class Homework(SQLModel, table=True):
 
     class_: "Class" = Relationship(back_populates="homeworks")
     class_id: int = Field(foreign_key="class.id", ondelete="CASCADE", index=True)
+
+    def __str__(self) -> str:
+        return f"Homework #{self.id}"
