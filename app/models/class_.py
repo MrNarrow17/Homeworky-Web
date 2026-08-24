@@ -21,21 +21,20 @@ class Class(ClassBase, table=True):
         back_populates="class_",
         sa_relationship_kwargs={
             "cascade": "all, delete-orphan",
-            "passive_deletes": True,
         },
     )
+
     homeworks: list["Homework"] = Relationship(
         back_populates="class_",
         sa_relationship_kwargs={
             "cascade": "all, delete-orphan",
-            "passive_deletes": True,
         },
     )
+
     sessions: list["ClassSession"] = Relationship(
         back_populates="class_",
         sa_relationship_kwargs={
             "cascade": "all, delete-orphan",
-            "passive_deletes": True,
         },
     )
 

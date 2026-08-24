@@ -26,6 +26,5 @@ class StaffMember(SQLModel, table=True):
         back_populates="staff_member",
         sa_relationship_kwargs={
             "cascade": "all, delete-orphan",
-            "passive_deletes": True,
         },
     )

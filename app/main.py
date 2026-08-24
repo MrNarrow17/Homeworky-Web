@@ -3,14 +3,19 @@ from fastapi.responses import RedirectResponse
 
 load_dotenv()
 
+import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
+from alembic.config import Config
 from fastapi import FastAPI, Response
+from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqladmin import Admin
 from starlette.middleware.sessions import SessionMiddleware
 
+from alembic import command
 from app.admin import AdminAuth, ClassAdmin, StaffAdmin
 from app.config import get_settings
 from app.database import engine, init_db
@@ -18,9 +23,18 @@ from app.routers import classes, staff
 
 settings = get_settings()
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def run_migrations():
+    ini_path = os.path.join(BASE_DIR, "alembic.ini")
+    alembic_cfg = Config(ini_path)
+    command.upgrade(alembic_cfg, "head")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    await run_in_threadpool(run_migrations)
     init_db()
     yield
 
