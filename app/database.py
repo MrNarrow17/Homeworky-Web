@@ -13,9 +13,15 @@ engine = create_engine(
 
 
 def init_db() -> None:
+    """
+    Initializes the database by creating all tables defined in the SQLModel metadata.
+    """
     SQLModel.metadata.create_all(engine)
 
 
 def get_session():
+    """
+    A cached factory function for the Settings object.
+    """
     with Session(engine) as session:
         yield session

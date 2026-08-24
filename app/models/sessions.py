@@ -18,6 +18,13 @@ settings = get_settings()
 
 
 class ClassSession(SQLModel, table=True):
+    """
+    Represents a class session table in the database.
+
+    Relationships:
+        - Class: Many-to-one relationship.
+    """
+
     id: int | None = Field(
         default=None,
         primary_key=True,
@@ -32,17 +39,33 @@ class ClassSession(SQLModel, table=True):
 
     @classmethod
     def from_entity(cls, token_hash: str, entity_id: int) -> ClassSession:
+        """
+        Creates a ClassSession from an entity ID. Used for a polymorphic relationship
+        """
         return cls(token_hash=token_hash, class_id=entity_id)
 
     @property
     def session_type(self) -> SessionType:
+        """
+        Returns the session type for this session. Used for polymorphic relationship.
+        """
         return SessionType.CLASS
 
     def __str__(self) -> str:
+        """
+        Represents the string version of the ClassSession model.
+        """
         return f"Session #{self.id}"
 
 
 class StaffSession(SQLModel, table=True):
+    """
+    Represents a staff session table in the database.
+
+    Relationships:
+        - StaffMember: Many-to-one relationship.
+    """
+
     id: int | None = Field(
         default=None,
         primary_key=True,
@@ -57,21 +80,36 @@ class StaffSession(SQLModel, table=True):
 
     @classmethod
     def from_entity(cls, token_hash: str, entity_id: int) -> StaffSession:
+        """
+        Creates a ClassSession from an entity ID. Used for a polymorphic relationship
+        """
         return cls(token_hash=token_hash, staff_member_id=entity_id)
 
     @property
     def class_(self) -> Class:
+        """
+        Returns the class associated with this staff session.
+        """
         return self.staff_member.class_
 
     @property
     def class_id(self) -> int:
+        """
+        Returns the class ID associated with this staff session.
+        """
         return self.staff_member.class_id
 
     @property
     def session_type(self) -> SessionType:
+        """
+        Returns the session type for this session. Used for polymorphic relationship.
+        """
         return SessionType.STAFF
 
     def __str__(self) -> str:
+        """
+        Represents the string version of the StaffSession model.
+        """
         return f"Session #{self.id}"
 
 

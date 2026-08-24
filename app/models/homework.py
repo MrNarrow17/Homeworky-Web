@@ -11,6 +11,13 @@ if TYPE_CHECKING:
 
 
 class Homework(SQLModel, table=True):
+    """
+    Represents a homework table in the database.
+
+    Relationships:
+        - Class: Many-to-one relationship.
+    """
+
     id: int | None = Field(default=None, primary_key=True)
 
     date: date_type
@@ -27,4 +34,8 @@ class Homework(SQLModel, table=True):
     class_id: int = Field(foreign_key="class.id", ondelete="CASCADE", index=True)
 
     def __str__(self) -> str:
+        """
+        Represents the string version of the homework model.
+        """
+
         return f"Homework #{self.id}"

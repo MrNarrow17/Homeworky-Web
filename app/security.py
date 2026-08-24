@@ -14,6 +14,10 @@ from app.schemas.sessions import SessionType, ViewerContext
 
 
 class GeneralSecurity:
+    """
+    A class for general security operations.
+    """
+
     def __init__(self, settings: Settings | None = None):
         self._settings = settings or get_settings()
         token_secret = self._settings.token_secret
@@ -27,6 +31,10 @@ class GeneralSecurity:
     ### Token Hashing ###
 
     def hash_token(self, opaque_token: str) -> str:
+        """
+        Hashes the given opaque token using the token secret with a sha256 hash.
+        """
+
         return hmac.new(
             self._token_secret, opaque_token.encode("utf-8"), "sha256"
         ).hexdigest()
@@ -34,11 +42,18 @@ class GeneralSecurity:
     ### Password Hashing ###
 
     def hash_password(self, plain_password: str) -> str:
+        """
+        Hashes the given plain password using bcrypt.
+        """
+
         salt = bcrypt.gensalt()
         hashed = bcrypt.hashpw(plain_password.encode("utf-8"), salt)
         return hashed.decode("utf-8")
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
+        """
+        Verifies the given plain password against the hashed password using bcrypt.
+        """
         try:
             return bcrypt.checkpw(
                 plain_password.encode("utf-8"), hashed_password.encode("utf-8")
@@ -48,6 +63,10 @@ class GeneralSecurity:
 
 
 class SessionSecurity(GeneralSecurity):
+    """
+    A base class for session security.
+    """
+
     def __init__(
         self,
         settings: Settings | None = None,
@@ -60,6 +79,10 @@ class SessionSecurity(GeneralSecurity):
     def _lookup_session(
         self, token_hash: str, db_session: Session
     ) -> AppSession | None:
+        """
+        Looks up a session by token hash in the database.
+        """
+
         class_stmt = select(ClassSession).where(ClassSession.token_hash == token_hash)
         class_session = db_session.exec(class_stmt).first()
         if class_session:
@@ -75,6 +98,10 @@ class SessionSecurity(GeneralSecurity):
     def get_current_session(
         self, request: Request, db_session: Session
     ) -> AppSession | None:
+        """
+        Gets the current session from the request cookies and looks it up in the database.
+        """
+
         token = request.cookies.get(self._session_cookie)
         if not token:
             return
@@ -87,6 +114,11 @@ class SessionSecurity(GeneralSecurity):
         entity_id: int,
         db_session: Session,
     ) -> None:
+        """
+        Issues a new session for the given entity and sets the session cookie in the response.
+        Used for a polymorphic relationship.
+        """
+
         token_hash = self.hash_token(secrets.token_urlsafe(64))
         new_session = session_type.session_model.from_entity(token_hash, entity_id)
         db_session.add(new_session)
@@ -100,6 +132,10 @@ class SessionSecurity(GeneralSecurity):
         response: Response,
         db_session: Session,
     ) -> None:
+        """
+        Invalidates the current session by deleting it from the database and clearing the session cookie.
+        """
+
         token = request.cookies.get(self._session_cookie)
         if not token:
             return
@@ -117,6 +153,10 @@ class SessionSecurity(GeneralSecurity):
     def set_session_cookie(
         self, response: Response, token: str, session_type: SessionType
     ) -> Response:
+        """
+        Sets the session cookie in the response with the given token and session type.
+        """
+
         response.set_cookie(
             key=self._session_cookie,
             value=token,
@@ -128,6 +168,10 @@ class SessionSecurity(GeneralSecurity):
         return response
 
     def delete_session_cookie(self, response: Response) -> Response:
+        """
+        Deletes the session cookie from the response.
+        """
+
         response.delete_cookie(
             key=self._session_cookie,
             httponly=True,
@@ -138,6 +182,10 @@ class SessionSecurity(GeneralSecurity):
 
 
 class ClassSecurity(SessionSecurity):
+    """
+    A class for handling ClassSession security.
+    """
+
     def __init__(
         self,
         settings: Settings | None = None,
@@ -149,6 +197,10 @@ class ClassSecurity(SessionSecurity):
         request: Request,
         db_session: Session = Depends(get_session),
     ) -> ViewerContext | None:
+        """
+        Returns the viewer context for the current session, if one exists.
+        """
+
         session = self.get_current_session(request, db_session)
         if session:
             return ViewerContext(session.class_id, session.session_type)
@@ -159,6 +211,10 @@ class ClassSecurity(SessionSecurity):
         class_id: int,
         db_session: Session = Depends(get_session),
     ) -> ViewerContext:
+        """
+        Requires a session to be present and valid for the given class.
+        """
+
         session = self.get_current_session(request, db_session)
         if session:
             if session.class_id != class_id:
@@ -168,6 +224,10 @@ class ClassSecurity(SessionSecurity):
 
 
 class StaffSecurity(SessionSecurity):
+    """
+    A class for handling StaffSession security.
+    """
+
     def __init__(
         self,
         settings: Settings | None = None,
@@ -177,6 +237,10 @@ class StaffSecurity(SessionSecurity):
     def require_session(
         self, request: Request, db_session: Session = Depends(get_session)
     ) -> StaffSession:
+        """
+        Requires a session to be present and valid for the given class.
+        """
+
         session = self.get_current_session(request, db_session)
         if session:
             if not isinstance(session, SessionType.STAFF.session_model):
@@ -187,14 +251,26 @@ class StaffSecurity(SessionSecurity):
 
 @lru_cache
 def get_general_security() -> GeneralSecurity:
+    """
+    A cached factory function for the GeneralSecurity object.
+    """
+
     return GeneralSecurity()
 
 
 @lru_cache
 def get_staff_security() -> StaffSecurity:
+    """
+    A cached factory function for the StaffSecurity object.
+    """
+
     return StaffSecurity()
 
 
 @lru_cache
 def get_class_security() -> ClassSecurity:
+    """
+    A cached factory function for the ClassSecurity object.
+    """
+
     return ClassSecurity()

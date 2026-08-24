@@ -13,6 +13,15 @@ if TYPE_CHECKING:
 
 
 class Class(ClassBase, table=True):
+    """
+    Represents a class table in the database.
+
+    Relationships:
+        - StaffMember: One-to-many relationship.
+        - Homework: One-to-many relationship.
+        - ClassSession: One-to-many relationship.
+    """
+
     id: int | None = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=lambda: get_settings().current_time)
     hashed_password: str
@@ -39,4 +48,8 @@ class Class(ClassBase, table=True):
     )
 
     def __str__(self):
+        """
+        Represents the string version of the class model.
+        """
+
         return self.name

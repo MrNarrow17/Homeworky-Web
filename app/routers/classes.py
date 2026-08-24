@@ -27,6 +27,13 @@ async def get_classes(
     session: Session = Depends(get_session),
     context: ViewerContext | None = Depends(class_security.get_view_context),
 ):
+    """
+    An endpoint representing the class browser.
+
+    Responses:
+        - 307: Redirect to staff dashboard or class page.
+        - 200: HTML response with the list of classes.
+    """
     if context:
         return RedirectResponse(
             url="/staff/dashboard"
@@ -48,6 +55,15 @@ async def join_class(
     response: Response,
     db_session: Session = Depends(get_session),
 ):
+    """
+    An endpoint for joining a class.
+
+    Responses:
+        - 200: Class joined successfully.
+        - 404: Class not found.
+        - 401: Wrong password.
+    """
+
     db_class = db_session.get(Class, data.id)
 
     if not db_class:
@@ -66,6 +82,13 @@ async def join_class(
 def logout(
     request: Request, response: Response, db_session: Session = Depends(get_session)
 ):
+    """
+    An endpoint for logging out of the class.
+
+    Responses:
+        - 303: Redirect to classes page.
+    """
+
     response = RedirectResponse(url="/classes", status_code=303)
     class_security.invalidate_session(request, response, db_session)
     return response
@@ -79,6 +102,15 @@ async def get_class(
     db_session: Session = Depends(get_session),
     viewer: ViewerContext = Depends(class_security.require_session),
 ):
+    """
+    An endpoint for viewing a class.
+
+    Responses:
+        - 200: HTML response with the class details.
+        - 403: Wrong class.
+        - 401: Unauthorized.
+        - 404: Class not found.
+    """
     db_class = db_session.get(Class, class_id)
     if not db_class:
         raise HTTPException(status_code=404, detail="Class not found")
@@ -121,6 +153,16 @@ def get_homework_for_week(
     session: Session = Depends(get_session),
     viewer: ViewerContext = Depends(class_security.require_session),
 ):
+    """
+    An endpoint for viewing homework for a specific week.
+
+    Responses:
+        - 200: HTML response with the homework list.
+        - 403: Wrong class.
+        - 401: Unauthorized.
+        - 404: Class not found.
+    """
+
     db_class = session.get(Class, class_id)
     if not db_class:
         raise HTTPException(status_code=404, detail="Class not found")

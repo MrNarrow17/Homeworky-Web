@@ -37,6 +37,13 @@ class_security = get_class_security()
 
 @router.get("/login/", response_class=HTMLResponse)
 async def staff_login(request: Request):
+    """
+    An endpoint for displaying the login form.
+
+    Responses:
+        - 200: HTML response with the login form.
+    """
+
     return templates.TemplateResponse(request, "login.html")
 
 
@@ -47,6 +54,14 @@ async def staff_login_post(
     response: Response,
     db_session: Session = Depends(get_session),
 ):
+    """
+    An endpoint for logging in a staff member.
+
+    Responses:
+        - 200: Login successful, redirects to the dashboard.
+        - 401: Invalid credentials.
+    """
+
     staff_member = db_session.exec(
         select(StaffMember).where(StaffMember.username == credentials.username)
     ).first()
@@ -67,6 +82,13 @@ async def staff_login_post(
 async def staff_logout(
     request: Request, response: Response, db_session: Session = Depends(get_session)
 ):
+    """
+    An endpoint for logging out of a staff member account.
+
+    Responses:
+        - 303: Redirects to the classes page after logout.
+    """
+
     response = RedirectResponse(url="/classes", status_code=303)
     staff_security.invalidate_session(request, response, db_session)
     return response
@@ -78,6 +100,15 @@ async def staff_dashboard(
     staff_session: StaffSession = Depends(staff_security.require_session),
     db_session: Session = Depends(get_session),
 ):
+    """
+    An endpoint for displaying the staff dashboard.
+
+    Responses:
+        - 200: HTML response with the dashboard content.
+        - 401: Unauthorized.
+        - 403: Wrong session type.
+    """
+
     settings = get_settings()
     now = settings.current_time
     current_year, current_week, _ = now.isocalendar()
@@ -119,6 +150,15 @@ async def staff_homework(
     staff_session: StaffSession = Depends(staff_security.require_session),
     db_session: Session = Depends(get_session),
 ):
+    """
+    An endpoint for displaying the staff homework list.
+
+    Responses:
+        - 200: HTML response with the homework list.
+        - 401: Unauthorized.
+        - 403: Wrong session type.
+    """
+
     staff_member = staff_session.staff_member
     statement = (
         select(Homework)
@@ -144,6 +184,15 @@ async def get_homework_form(
     class_id: int,
     staff_session: StaffSession = Depends(staff_security.require_session),
 ):
+    """
+    An endpoint for displaying the homework form.
+
+    Responses:
+        - 200: HTML response with the homework form.
+        - 401: Unauthorized.
+        - 403: Wrong session type.
+    """
+
     if staff_session.staff_member.class_id != class_id:
         raise HTTPException(status_code=403, detail="Forbidden")
 
@@ -161,6 +210,15 @@ async def post_homework_form(
     staff_session: StaffSession = Depends(staff_security.require_session),
     session: Session = Depends(get_session),
 ):
+    """
+    An endpoint for submitting a new homework form.
+
+    Responses:
+        - 303: Redirects to the homework list after submission.
+        - 401: Unauthorized.
+        - 403: Wrong session type.
+    """
+
     staff_member = staff_session.staff_member
     class_id = staff_member.class_id
 
@@ -203,6 +261,15 @@ async def get_edit_homework_form(
     staff_session: StaffSession = Depends(staff_security.require_session),
     session: Session = Depends(get_session),
 ):
+    """
+    An endpoint for displaying the homework form for editing.
+
+    Responses:
+        - 200: HTML response with the homework form.
+        - 401: Unauthorized.
+        - 403: Wrong session type.
+    """
+
     homework = session.get(Homework, homework_id)
     if not homework:
         raise HTTPException(status_code=404, detail="Homework not found")
@@ -225,6 +292,15 @@ async def post_edit_homework_form(
     staff_session: StaffSession = Depends(staff_security.require_session),
     session: Session = Depends(get_session),
 ):
+    """
+    An endpoint for submitting an edited homework form.
+
+    Responses:
+        - 303: Redirects to the homework list after submission.
+        - 401: Unauthorized.
+        - 403: Wrong session type.
+    """
+
     homework = session.get(Homework, homework_id)
     if not homework:
         raise HTTPException(status_code=404, detail="Homework not found")
@@ -270,6 +346,15 @@ async def delete_homework(
     staff_session: StaffSession = Depends(staff_security.require_session),
     session: Session = Depends(get_session),
 ):
+    """
+    An endpoint for deleting a homework.
+
+    Responses:
+        - 303: Redirects to the homework list after deletion.
+        - 401: Unauthorized.
+        - 403: Wrong session type.
+    """
+
     homework = session.get(Homework, homework_id)
     if not homework:
         raise HTTPException(status_code=404, detail="Homework not found")

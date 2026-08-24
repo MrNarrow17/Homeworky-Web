@@ -14,6 +14,10 @@ security = get_general_security()
 
 
 class AdminAuth(AuthenticationBackend):
+    """
+    Authentication backend for the admin panel.
+    """
+
     async def login(self, request: Request) -> bool | RedirectResponse:
         form = await request.form()
         username, password = form["username"], form["password"]
@@ -35,6 +39,10 @@ class AdminAuth(AuthenticationBackend):
 
 
 class ClassAdmin(ModelView, model=Class):
+    """
+    Admin view for the Class model.
+    """
+
     name = "Class"
     name_plural = "Classes"
 
@@ -55,6 +63,9 @@ class ClassAdmin(ModelView, model=Class):
     async def on_model_change(
         self, data: dict, model: Class, is_created: bool, request: Request
     ) -> None:
+        """
+        Method called when a model is changed.
+        """
         raw_password = data.get("hashed_password")
         if raw_password:
             secure_hash = security.hash_password(raw_password)
@@ -66,6 +77,10 @@ class ClassAdmin(ModelView, model=Class):
 
 
 class StaffAdmin(ModelView, model=StaffMember):
+    """
+    Admin view for the StaffMember model.
+    """
+
     name = "Staff"
     name_plural = "Staff"
 
@@ -95,6 +110,9 @@ class StaffAdmin(ModelView, model=StaffMember):
     async def on_model_change(
         self, data: dict, model: Class, is_created: bool, request: Request
     ) -> None:
+        """
+        Method called when a model is changed.
+        """
         raw_password = data.get("hashed_password")
         if raw_password:
             secure_hash = security.hash_password(raw_password)

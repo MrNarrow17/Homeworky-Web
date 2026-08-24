@@ -11,6 +11,14 @@ if TYPE_CHECKING:
 
 
 class StaffMember(SQLModel, table=True):
+    """
+    Represents a staff member table in the database.
+
+    Relationships:
+        - Class: Many-to-one relationship.
+        - StaffSession: One-to-many relationship.
+    """
+
     id: int | None = Field(default=None, primary_key=True)
     username: str = Field(unique=True, index=True)
     created_at: datetime = Field(default_factory=lambda: get_settings().current_time)
@@ -30,4 +38,7 @@ class StaffMember(SQLModel, table=True):
     )
 
     def __str__(self) -> str:
+        """
+        Represents the string version of the StaffMember model.
+        """
         return self.username

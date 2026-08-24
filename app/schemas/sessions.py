@@ -5,6 +5,10 @@ from app.models.sessions import SessionType
 
 @dataclass(frozen=True)
 class ViewerContext:
+    """
+    Represents the context of the viewer.
+    """
+
     class_id: int
     session_type: SessionType
 
