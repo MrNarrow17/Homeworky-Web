@@ -13,7 +13,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app.admin import AdminAuth, ClassAdmin, StaffAdmin
 from app.config import get_settings
-from app.database import engine, init_db
+from app.database import engine, init_db, run_migrations
 from app.routers import classes, staff
 
 settings = get_settings()
@@ -21,6 +21,7 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    run_migrations()
     init_db()
     yield
 
