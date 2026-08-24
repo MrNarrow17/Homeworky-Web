@@ -8,9 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     app_name: str = Field(default="Homework APP", validation_alias="APP_NAME")
     debug_mode: bool = Field(default=False, validation_alias="DEBUG_MODE")
-    database_url: SecretStr = Field(
-        default=SecretStr(""), validation_alias="DATABASE_URL"
-    )
+    database_url: SecretStr = Field(validation_alias="DATABASE_URL")
     time_delta: int = Field(default=2, validation_alias="TIMEDELTA")
     token_secret: str = Field(default="", validation_alias="TOKEN_SECRET")
 

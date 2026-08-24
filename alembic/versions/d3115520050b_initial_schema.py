@@ -1,8 +1,8 @@
-"""Initial baseline
+"""initial schema
 
-Revision ID: 675ec1e90f23
+Revision ID: d3115520050b
 Revises: 
-Create Date: 2026-08-23 23:01:07.320231
+Create Date: 2026-08-24 12:20:41.116919
 
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision: str = '675ec1e90f23'
+revision: str = 'd3115520050b'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -34,7 +34,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('token_hash', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('class_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['class_id'], ['class.id'], ),
+    sa.ForeignKeyConstraint(['class_id'], ['class.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_classsession_class_id'), 'classsession', ['class_id'], unique=False)
@@ -49,7 +49,7 @@ def upgrade() -> None:
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('created_by', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('class_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['class_id'], ['class.id'], ),
+    sa.ForeignKeyConstraint(['class_id'], ['class.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_homework_class_id'), 'homework', ['class_id'], unique=False)
@@ -59,7 +59,7 @@ def upgrade() -> None:
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('hashed_password', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('class_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['class_id'], ['class.id'], ),
+    sa.ForeignKeyConstraint(['class_id'], ['class.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_staffmember_username'), 'staffmember', ['username'], unique=True)
@@ -67,7 +67,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('token_hash', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('staff_member_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['staff_member_id'], ['staffmember.id'], ),
+    sa.ForeignKeyConstraint(['staff_member_id'], ['staffmember.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_staffsession_staff_member_id'), 'staffsession', ['staff_member_id'], unique=False)
