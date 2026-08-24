@@ -25,5 +25,5 @@ jobs:
       - name: Deploy to FastAPI Cloud
         run: uv run fastapi deploy
         env:
-          FASTAPI_CLOUD_TOKEN: ${{ secrets.FASTAPI_CLOUD_TOKEN }}
-          FASTAPI_CLOUD_APP_ID: ${{ secrets.FASTAPI_CLOUD_APP_ID }}
+          FASTAPI_CLOUD_TOKEN: ${{ vars.FASTAPI_CLOUD_TOKEN }}
+          FASTAPI_CLOUD_APP_ID: ${{ vars.FASTAPI_CLOUD_APP_ID }}
