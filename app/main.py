@@ -18,7 +18,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from alembic import command
 from app.admin import AdminAuth, ClassAdmin, StaffAdmin
 from app.config import get_settings
-from app.database import engine, init_db
+from app.database import engine
 from app.routers import classes, staff
 
 settings = get_settings()
@@ -35,7 +35,6 @@ def run_migrations():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await run_in_threadpool(run_migrations)
-    init_db()
     yield
 
 
