@@ -16,16 +16,16 @@ class StaffMember(SQLModel, table=True):
     created_at: datetime = Field(default_factory=lambda: get_settings().current_time)
     hashed_password: str
 
-    class_: "Class" = Relationship(
-        back_populates="staff",
-        sa_relationship_kwargs={
-            "cascade": "all, delete-orphan",
-            "passive_deletes": True,
-        },
-    )
+    class_: "Class" = Relationship(back_populates="staff")
     class_id: int = Field(
         foreign_key="class.id",
         ondelete="CASCADE",
     )
 
-    sessions: list["StaffSession"] = Relationship(back_populates="staff_member")
+    sessions: list["StaffSession"] = Relationship(
+        back_populates="staff_member",
+        sa_relationship_kwargs={
+            "cascade": "all, delete-orphan",
+            "passive_deletes": True,
+        },
+    )
