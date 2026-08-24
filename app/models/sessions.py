@@ -26,7 +26,9 @@ class ClassSession(SQLModel, table=True):
     token_hash: str = Field(index=True)
 
     class_: Class = Relationship(back_populates="sessions")
-    class_id: int = Field(default=None, foreign_key="class.id", index=True)
+    class_id: int = Field(
+        default=None, foreign_key="class.id", ondelete="CASCADE", index=True
+    )
 
     @classmethod
     def from_entity(cls, token_hash: str, entity_id: int) -> ClassSession:
@@ -46,7 +48,9 @@ class StaffSession(SQLModel, table=True):
     token_hash: str = Field(index=True)
 
     staff_member: StaffMember = Relationship(back_populates="sessions")
-    staff_member_id: int = Field(default=None, foreign_key="staffmember.id", index=True)
+    staff_member_id: int = Field(
+        default=None, foreign_key="staffmember.id", ondelete="CASCADE", index=True
+    )
 
     @classmethod
     def from_entity(cls, token_hash: str, entity_id: int) -> StaffSession:

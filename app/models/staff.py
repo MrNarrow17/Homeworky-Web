@@ -17,6 +17,9 @@ class StaffMember(SQLModel, table=True):
     hashed_password: str
 
     class_: "Class" = Relationship(back_populates="staff")
-    class_id: int = Field(foreign_key="class.id")
+    class_id: int = Field(
+        foreign_key="class.id",
+        ondelete="CASCADE",
+    )
 
     sessions: list["StaffSession"] = Relationship(back_populates="staff_member")

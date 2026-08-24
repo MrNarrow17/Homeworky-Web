@@ -24,4 +24,4 @@ class Homework(SQLModel, table=True):
     created_by: str
 
     class_: "Class" = Relationship(back_populates="homeworks")
-    class_id: int = Field(foreign_key="class.id", index=True)
+    class_id: int = Field(foreign_key="class.id", ondelete="CASCADE", index=True)
