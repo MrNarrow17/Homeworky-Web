@@ -17,9 +17,27 @@ class Class(ClassBase, table=True):
     created_at: datetime = Field(default_factory=lambda: get_settings().current_time)
     hashed_password: str
 
-    staff: list["StaffMember"] = Relationship(back_populates="class_")
-    homeworks: list["Homework"] = Relationship(back_populates="class_")
-    sessions: list["ClassSession"] = Relationship(back_populates="class_")
+    staff: list["StaffMember"] = Relationship(
+        back_populates="class_",
+        sa_relationship_kwargs={
+            "cascade": "all, delete-orphan",
+            "passive_deletes": True,
+        },
+    )
+    homeworks: list["Homework"] = Relationship(
+        back_populates="class_",
+        sa_relationship_kwargs={
+            "cascade": "all, delete-orphan",
+            "passive_deletes": True,
+        },
+    )
+    sessions: list["ClassSession"] = Relationship(
+        back_populates="class_",
+        sa_relationship_kwargs={
+            "cascade": "all, delete-orphan",
+            "passive_deletes": True,
+        },
+    )
 
     def __str__(self):
         return self.name
