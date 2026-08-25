@@ -20,6 +20,9 @@ jobs:
         run: uv run alembic upgrade head
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TOKEN_SECRET: ${{ secrets.TOKEN_SECRET }}
+          CLASS_SESSION_COOKIE: ${{ vars.CLASS_SESSION_COOKIE }}
+          STAFF_SESSION_COOKIE: ${{ vars.STAFF_SESSION_COOKIE }}
 
       - name: Deploy to FastAPI Cloud
         run: uv run fastapi deploy
@@ -27,7 +30,4 @@ jobs:
           FASTAPI_CLOUD_TOKEN: ${{ vars.FASTAPI_CLOUD_TOKEN }}
           FASTAPI_CLOUD_APP_ID: ${{ vars.FASTAPI_CLOUD_APP_ID }}
 
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          TOKEN_SECRET: ${{ secrets.TOKEN_SECRET }}
-          CLASS_SESSION_COOKIE: ${{ vars.CLASS_SESSION_COOKIE }}
-          STAFF_SESSION_COOKIE: ${{ vars.STAFF_SESSION_COOKIE }}
+          
