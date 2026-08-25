@@ -53,6 +53,7 @@ async def staff_login(request: Request):
 
 @router.post("/login/", response_model=LoginResponse)
 async def staff_login_post(
+    request: Request,
     credentials: LoginRequest,
     response: Response,
     db_session: Session = Depends(get_session),
@@ -73,7 +74,7 @@ async def staff_login_post(
     ):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    staff_security.issue_session(response, staff_member.id, db_session)
+    staff_security.issue_session(request, response, staff_member.id, db_session)
 
     return LoginResponse(redirect_url="/staff/dashboard")
 

@@ -12,25 +12,19 @@ class Settings(BaseSettings):
 
     app_name: str = Field(default="Homework APP", validation_alias="APP_NAME")
     debug_mode: bool = Field(default=False, validation_alias="DEBUG_MODE")
-    database_url: SecretStr = Field(
-        default=SecretStr(""), validation_alias="DATABASE_URL"
-    )
-    time_delta: int = Field(default=2, validation_alias="TIMEDELTA")
-    token_secret: str = Field(default="", validation_alias="TOKEN_SECRET")
+    database_url: SecretStr = Field(validation_alias="DATABASE_URL")
+    time_delta: int = Field(default=3, validation_alias="TIMEDELTA")
+    token_secret: str = Field(validation_alias="TOKEN_SECRET")
 
     class_session_lifetime: int = Field(
         default=315360000, validation_alias="CLASS_SESSION_LIFETIME"
     )
 
     staff_session_lifetime: int = Field(
-        default=315360000, validation_alias="STAFF_SESSION_LIFETIME"
+        default=3600, validation_alias="STAFF_SESSION_LIFETIME"
     )
-    class_session_cookie: str = Field(
-        default="", validation_alias="CLASS_SESSION_COOKIE"
-    )
-    staff_session_cookie: str = Field(
-        default="", validation_alias="STAFF_SESSION_COOKIE"
-    )
+    class_session_cookie: str = Field(validation_alias="CLASS_SESSION_COOKIE")
+    staff_session_cookie: str = Field(validation_alias="STAFF_SESSION_COOKIE")
     admin_username: str = Field(default="admin", validation_alias="ADMIN_USERNAME")
     admin_password: str = Field(default="admin", validation_alias="ADMIN_PASSWORD")
 

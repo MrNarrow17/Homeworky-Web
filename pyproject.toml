@@ -19,6 +19,7 @@ dependencies = [
     "bcrypt",
     "uvicorn",
     "python-json-logger",
+    "user-agents",
 ]
 
 [tool.setuptools]

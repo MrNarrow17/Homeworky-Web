@@ -7,6 +7,7 @@ import bcrypt
 from fastapi import Depends, Request, Response
 from fastapi.exceptions import HTTPException
 from sqlmodel import Session, select
+from user_agents import parse
 
 from app.config import Settings, get_settings
 from app.database import get_session
@@ -91,6 +92,30 @@ class SessionSecurity(ABC, GeneralSecurity):
     def session_model(self) -> AppSessionModel:
         pass
 
+    ### User Agents ###
+
+    def get_user_agent_from_request(self, request: Request) -> dict | None:
+        """
+        Gets the user agent string from a request then parses it to dict
+        """
+        user_agent_string = request.headers.get("user-agent")
+        if user_agent_string:
+            ua = parse(user_agent_string)
+            return {
+                "raw_user_agent": user_agent_string,
+                "device_family": ua.device.family,
+                "device_brand": ua.device.brand,
+                "device_model": ua.device.model,
+                "os_family": ua.os.family,
+                "os_version": ua.os.version_string,
+                "browser_family": ua.browser.family,
+                "browser_version": ua.browser.version_string,
+                "is_mobile": ua.is_mobile,
+                "is_tablet": ua.is_tablet,
+                "is_pc": ua.is_pc,
+                "is_bot": ua.is_bot,
+            }
+
     ### Sessions ###
 
     def _lookup_session(
@@ -118,6 +143,7 @@ class SessionSecurity(ABC, GeneralSecurity):
 
     def issue_session(
         self,
+        request: Request,
         response: Response,
         entity_id: int,
         db_session: Session,
@@ -129,7 +155,9 @@ class SessionSecurity(ABC, GeneralSecurity):
         raw_token = secrets.token_urlsafe(64)
         token_hash = self.hash_token(raw_token)
 
-        new_session = self.session_model.from_entity(token_hash, entity_id)
+        new_session = self.session_model.from_entity(
+            token_hash, entity_id, device_data=self.get_user_agent_from_request(request)
+        )
         db_session.add(new_session)
         db_session.commit()
 

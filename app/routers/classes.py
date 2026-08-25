@@ -73,7 +73,7 @@ async def join_class(
         raise HTTPException(status_code=401, detail="Wrong password")
 
     class_security.invalidate_session(request, response, db_session)
-    class_security.issue_session(response, db_class.id, db_session)
+    class_security.issue_session(request, response, db_class.id, db_session)
 
     return db_class
 

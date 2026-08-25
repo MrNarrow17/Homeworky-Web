@@ -1,5 +1,5 @@
-from logging.config import fileConfig
 import os
+from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
 from sqlmodel import SQLModel
@@ -30,7 +30,9 @@ database_url = os.environ.get("DATABASE_URL")
 if database_url:
     config.set_main_option("sqlalchemy.url", database_url)
 else:
-    config.set_main_option("sqlalchemy.url", get_settings().database_url.get_secret_value())
+    config.set_main_option(
+        "sqlalchemy.url", get_settings().database_url.get_secret_value()
+    )
 
 target_metadata = SQLModel.metadata
 
