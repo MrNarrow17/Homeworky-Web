@@ -74,6 +74,7 @@ async def staff_login_post(
     ):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
+    staff_security.invalidate_session(request, response, db_session)
     staff_security.issue_session(request, response, staff_member.id, db_session)
 
     return LoginResponse(redirect_url="/staff/dashboard")
@@ -333,7 +334,7 @@ async def post_edit_homework_form(
     return RedirectResponse(url="/staff/dashboard/", status_code=303)
 
 
-@router.post("/homework/{homework_id}/delete")
+@router.post("/homework/{homework_id}/delete/")
 async def delete_homework(
     homework_id: int,
     viewer: ViewerContext = Depends(viewer_deps.require_staff),
