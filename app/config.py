@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     admin_username: str = Field(default="admin", validation_alias="ADMIN_USERNAME")
     admin_password: str = Field(default="admin", validation_alias="ADMIN_PASSWORD")
 
+    telegram_link: str = Field(validation_alias="TELEGRAM_LINK")
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

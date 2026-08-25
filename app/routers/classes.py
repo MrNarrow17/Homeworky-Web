@@ -44,7 +44,9 @@ async def get_classes(
     db_classes = db_session.exec(select(Class)).all()
     safe_classes = [ClassPublic.model_validate(c) for c in db_classes]
     return templates.TemplateResponse(
-        request=request, name="classes.html", context={"classes": safe_classes}
+        request=request,
+        name="classes.html",
+        context={"classes": safe_classes, "telegram": settings.telegram_link},
     )
 
 

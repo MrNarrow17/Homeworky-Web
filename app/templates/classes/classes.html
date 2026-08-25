@@ -51,10 +51,60 @@
 
             ::selection { background: var(--accent); color: #fff; }
 
-            .topbar {
-                display: flex;
-                justify-content: flex-end;
+            /* Top bar grid: middle column is geometrically centered
+               regardless of the right button's width */
+            .topbar-row {
+                display: grid;
+                grid-template-columns: 1fr auto 1fr;
+                align-items: center;
                 margin-bottom: 2rem;
+            }
+            
+            .topbar-center {
+                grid-column: 2;           /* the middle auto column */
+                justify-self: center;
+            }
+            
+            .topbar-end {
+                grid-column: 3;
+                justify-self: end;
+            }
+            
+            /* Telegram Contact Snippet */
+            .telegram-snippet {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.6rem;
+                background: var(--card);
+                border: 1px solid var(--line);
+                padding: 0.5rem 1.1rem;
+                border-radius: 999px;
+                text-decoration: none;
+                color: var(--ink-soft);
+                font-size: 0.85rem;
+                font-weight: 600;
+                box-shadow: var(--shadow-sm);
+                transition: all .18s ease;
+            }
+            .telegram-snippet:hover {
+                color: #229ED9; /* Telegram blue */
+                border-color: rgba(34, 158, 217, .5);
+                transform: translateY(-1px);
+                box-shadow: var(--shadow-md);
+            }
+            .telegram-snippet i {
+                font-size: 1.1rem;
+                color: #229ED9;
+            }
+            
+            /* Mobile: stack and center everything */
+            @media (max-width: 575px) {
+                .topbar-row {
+                    grid-template-columns: 1fr;
+                    justify-items: center;
+                    gap: 0.75rem;
+                }
+                .topbar-center, .topbar-end { grid-column: 1; }
             }
 
             .btn-ghost {
@@ -239,11 +289,20 @@
     <body class="py-4 py-md-5">
         <div class="container" style="max-width: 900px">
             
-            <!-- Top Right Navigation -->
-            <div class="topbar">
-                <a href="/staff/login/" class="btn-ghost">
-                    <i class="bi bi-shield-lock"></i> Вхід для модератора
-                </a>
+            <!-- Top bar: Telegram centered, mod login pinned right -->
+            <div class="topbar-row">
+                <div class="topbar-center">
+                    <a href="{{ telegram }}" target="_blank" rel="noopener noreferrer" class="telegram-snippet">
+                        <i class="bi bi-telegram"></i>
+                        <span>Мій телеграм</span>
+                    </a>
+                </div>
+            
+                <div class="topbar-end">
+                    <a href="/staff/login/" class="btn-ghost">
+                        <i class="bi bi-shield-lock"></i> Вхід для модератора
+                    </a>
+                </div>
             </div>
 
             <header class="text-center mb-5">
