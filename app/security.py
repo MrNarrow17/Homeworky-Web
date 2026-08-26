@@ -106,6 +106,7 @@ class SessionSecurity(ABC, GeneralSecurity):
                 "device_family": ua.device.family,
                 "device_brand": ua.device.brand,
                 "device_model": ua.device.model,
+                "client_ip": request.client.host if request.client else None,
                 "os_family": ua.os.family,
                 "os_version": ua.os.version_string,
                 "browser_family": ua.browser.family,

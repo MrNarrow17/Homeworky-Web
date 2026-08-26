@@ -33,6 +33,8 @@ class BaseAppSession(SQLModel):
     device_brand: str | None = Field(default=None)
     device_model: str | None = Field(default=None)
 
+    client_ip: str | None = Field(default=None)
+
     os_family: str | None = Field(default=None, index=True)
     os_version: str | None = Field(default=None)
 
