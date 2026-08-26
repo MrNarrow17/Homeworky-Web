@@ -1,3 +1,4 @@
+import secrets
 import time
 from logging import Logger
 
@@ -39,30 +40,35 @@ class HSTSMiddleware:
 
 class CSPMiddleware:
     """
-    Middleware for setting Content Security Policy (CSP) headers.
+    Middleware for setting secure Content Security Policy (CSP) headers with Nonce.
     """
 
     def __init__(self, app: ASGIApp):
         self.app = app
-        self.csp_policy = (
-            "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://jsdelivr.net https://cloudflare.com; "
-            "style-src 'self' 'unsafe-inline' https://jsdelivr.net https://googleapis.com https://cloudflare.com; "
-            "font-src 'self' https://gstatic.com https://cloudflare.com; "
-            "img-src 'self' data: https://tiangolo.com; "
-            "frame-ancestors 'none';"
-        )
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
         if scope["type"] != "http" or settings.debug_mode:
             await self.app(scope, receive, send)
             return
 
+        nonce = secrets.token_urlsafe(16)
+        scope["csp_nonce"] = nonce
+
+        csp_policy = (
+            f"default-src 'self'; "
+            f"script-src 'self' 'nonce-{nonce}' 'unsafe-eval' https://jsdelivr.net https://cloudflare.com; "
+            f"style-src 'self' 'nonce-{nonce}' https://jsdelivr.net https://googleapis.com https://cloudflare.com; "
+            f"style-src-attr 'unsafe-inline'; "
+            f"font-src 'self' https://gstatic.com https://cloudflare.com; "
+            f"img-src 'self' data: https://tiangolo.com; "
+            f"frame-ancestors 'none';"
+        )
+
         async def send_wrapper(message):
             if message["type"] == "http.response.start":
                 headers = message.setdefault("headers", [])
                 headers.append(
-                    (b"content-security-policy", self.csp_policy.encode("latin-1"))
+                    (b"content-security-policy", csp_policy.encode("latin-1"))
                 )
             await send(message)
 
