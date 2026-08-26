@@ -30,6 +30,9 @@ class Settings(BaseSettings):
 
     telegram_link: str = Field(validation_alias="TELEGRAM_LINK")
 
+    logger_name: str = Field(default="app", validation_alias="LOGGER_NAME")
+    log_level: str = Field(default="INFO", validation_alias="LOG_LEVEL")
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
