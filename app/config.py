@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     time_delta: int = Field(default=3, validation_alias="TIMEDELTA")
     token_secret: str = Field(validation_alias="TOKEN_SECRET")
 
+    hsts_value: str = Field(validation_alias="HSTS_VALUE")
+
     class_session_lifetime: int = Field(
         default=315360000, validation_alias="CLASS_SESSION_LIFETIME"
     )

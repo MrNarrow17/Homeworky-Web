@@ -8,6 +8,35 @@ from app.config import get_settings
 settings = get_settings()
 
 
+class HSTSMiddleware:
+    """
+    Middleware for setting HTTP Strict Transport Security (HSTS) headers.
+    """
+
+    def __init__(self, app: ASGIApp):
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        async def send_with_hsts(message):
+            if message["type"] == "http.response.start":
+                headers = list(message.get("headers", []))
+                headers.append(
+                    (
+                        b"strict-transport-security",
+                        settings.hsts_value.encode("ascii"),
+                    )
+                )
+
+                message["headers"] = headers
+            await send(message)
+
+        await self.app(scope, receive, send_with_hsts)
+
+
 class CSPMiddleware:
     """
     Middleware for setting Content Security Policy (CSP) headers.
