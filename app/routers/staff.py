@@ -13,7 +13,7 @@ from fastapi import (
 from fastapi.requests import Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from sqlmodel import Session, col, func, select
+from sqlmodel import Session, select
 
 from app.config import get_settings
 from app.database import get_session
@@ -116,19 +116,11 @@ async def staff_dashboard(
 
     staff_member = viewer.staff_member_verified
 
-    homework_count = db_session.exec(
-        select(func.count(Homework.id)).where(
-            Homework.class_id == staff_member.class_id
-        )
-    ).one()
+    homework_count = Homework.count_in_class(db_session, staff_member.class_id)
 
-    week_homework_count = db_session.exec(
-        select(func.count(Homework.id)).where(
-            Homework.class_id == staff_member.class_id,
-            Homework.date >= start_date,
-            Homework.date <= end_date,
-        )
-    ).one()
+    week_homework_count = Homework.count_by_dates(
+        db_session, staff_member.class_id, start_date, end_date
+    )
 
     context = {
         "request": request,
@@ -159,12 +151,8 @@ async def staff_homework(
     """
 
     staff_member = viewer.staff_member_verified
-    statement = (
-        select(Homework)
-        .where(Homework.class_id == staff_member.class_id)
-        .order_by(col(Homework.date).desc())
-    )
-    homework_list = db_session.exec(statement).all()
+
+    homework_list = Homework.get_in_class(db_session, staff_member.class_id)
 
     context = {
         "request": request,

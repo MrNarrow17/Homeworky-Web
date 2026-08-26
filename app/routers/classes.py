@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from fastapi.requests import Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from sqlmodel import Session, col, select
+from sqlmodel import Session, select
 
 from app.config import get_settings
 from app.database import get_session
@@ -121,14 +121,7 @@ async def get_class(
     selected_week = week if week is not None else current_week
     start_date, end_date = get_week_range(current_year, selected_week)
 
-    statement = (
-        select(Homework)
-        .where(Homework.class_id == class_id)
-        .where(Homework.date >= start_date)
-        .where(Homework.date <= end_date)
-        .order_by(col(Homework.created_at))
-    )
-    homework_list = db_session.exec(statement).all()
+    homework_list = Homework.get_by_dates(db_session, class_id, start_date, end_date)
 
     return templates.TemplateResponse(
         request=request,
@@ -171,14 +164,7 @@ def get_homework_for_week(
 
     start_date, end_date = get_week_range(current_year, week)
 
-    statement = (
-        select(Homework)
-        .where(Homework.class_id == class_id)
-        .where(Homework.date >= start_date)
-        .where(Homework.date <= end_date)
-        .order_by(col(Homework.date))
-    )
-    homework_list = db_session.exec(statement).all()
+    homework_list = Homework.get_by_dates(db_session, class_id, start_date, end_date)
 
     return templates.TemplateResponse(
         request=request,
