@@ -15,7 +15,8 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.admin import AdminAuth, ClassAdmin, StaffAdmin
 from app.config import get_settings
 from app.database import engine
-from app.logger import LoggingMiddleware, get_app_logger
+from app.logger import get_app_logger
+from app.middleware import CSPMiddleware, LoggingMiddleware
 from app.routers import classes, staff
 
 settings = get_settings()
@@ -36,16 +37,17 @@ authentication_backend = AdminAuth(secret_key=settings.token_secret)
 admin = Admin(app, engine, authentication_backend=authentication_backend)
 
 
-app.add_middleware(LoggingMiddleware, logger=logger)
-app.add_middleware(SessionMiddleware, secret_key=settings.token_secret)
-
 app.add_middleware(
     CORSMiddleware,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+app.add_middleware(LoggingMiddleware, logger=logger)
+app.add_middleware(SessionMiddleware, secret_key=settings.token_secret)
+app.add_middleware(CSPMiddleware)
 
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 app.include_router(classes.router, prefix="/classes")

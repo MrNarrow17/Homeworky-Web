@@ -1,47 +1,13 @@
 import logging
 import sys
-import time
 from functools import lru_cache
 from logging import INFO, LogRecord
 
-from fastapi import Request
 from pythonjsonlogger.json import JsonFormatter
-from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
-from starlette.types import ASGIApp
 
 from app.config import get_settings
 
 settings = get_settings()
-
-
-class LoggingMiddleware(BaseHTTPMiddleware):
-    """
-    Middleware for logging HTTP requests and responses.
-    """
-
-    def __init__(self, app: ASGIApp, logger: logging.Logger):
-        super().__init__(app)
-        self.logger = logger
-
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint):
-        start_time = time.perf_counter()
-        response = await call_next(request)
-
-        process_time = time.perf_counter() - start_time
-
-        log_extra = {
-            "http_method": request.method,
-            "path": request.url.path,
-            "status_code": response.status_code,
-            "duration_seconds": round(process_time, 4),
-            "client_host": request.client.host if request.client else "unknown",
-        }
-
-        self.logger.info(
-            f"Request processed: {request.method} {request.url.path}", extra=log_extra
-        )
-
-        return response
 
 
 class CloudJSONFormatter(JsonFormatter):
