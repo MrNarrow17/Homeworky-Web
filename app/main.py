@@ -16,7 +16,7 @@ from app.admin import AdminAuth, ClassAdmin, StaffAdmin
 from app.config import get_settings
 from app.database import engine
 from app.logger import get_app_logger
-from app.middleware import CSPMiddleware, HSTSMiddleware, LoggingMiddleware
+from app.middleware import HSTSMiddleware, LoggingMiddleware
 from app.routers import classes, staff
 
 settings = get_settings()
@@ -47,7 +47,6 @@ app.add_middleware(
 
 app.add_middleware(LoggingMiddleware, logger=logger)
 app.add_middleware(SessionMiddleware, secret_key=settings.token_secret)
-app.add_middleware(CSPMiddleware)
 app.add_middleware(HSTSMiddleware)
 
 
