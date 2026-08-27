@@ -21,8 +21,8 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           TOKEN_SECRET: ${{ secrets.TOKEN_SECRET }}
-          HSTS_VALUE: ${{ secrets.HSTS_VALUE }}
-          ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+          HSTS_VALUE: ${{ vars.HSTS_VALUE }}
+          ADMIN_USERNAME: ${{ vars.ADMIN_USERNAME }}
           CLASS_SESSION_COOKIE: ${{ vars.CLASS_SESSION_COOKIE }}
           ADMIN_PASSWORD: ${{ vars.ADMIN_PASSWORD }}
           TELEGRAM_LINK: ${{ vars.TELEGRAM_LINK }}
