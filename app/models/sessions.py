@@ -14,8 +14,6 @@ if TYPE_CHECKING:
 type AppSession = StaffSession | ClassSession
 type AppSessionModel = type[AppSession]
 
-settings = get_settings()
-
 
 class BaseAppSession(SQLModel):
     """
@@ -46,7 +44,7 @@ class BaseAppSession(SQLModel):
     is_pc: bool = Field(default=False)
     is_bot: bool = Field(default=False)
 
-    created_at: datetime = Field(default_factory=lambda: settings.current_time)
+    created_at: datetime = Field(default_factory=lambda: get_settings().current_time)
 
 
 class ClassSession(BaseAppSession, table=True):
