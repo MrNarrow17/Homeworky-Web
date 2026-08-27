@@ -28,7 +28,7 @@ class GeneralSecurity:
                 "settings.token_secret is not configured. Add a long, random "
                 "TOKEN_SECRET to your environment/config."
             )
-        self._token_secret = token_secret.encode("utf-8")
+        self._token_secret = token_secret.get_secret_value().encode("utf-8")
 
     ### Token Hashing ###
 

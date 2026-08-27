@@ -1,13 +1,10 @@
-from dotenv import load_dotenv
-from fastapi.responses import RedirectResponse
-
-load_dotenv()
 import logging
 from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from sqladmin import Admin
 from starlette.middleware.sessions import SessionMiddleware
@@ -33,7 +30,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="My FastAPI App", version="1.0.0", lifespan=lifespan)
-authentication_backend = AdminAuth(secret_key=settings.token_secret)
+authentication_backend = AdminAuth(secret_key=settings.token_secret.get_secret_value())
 admin = Admin(app, engine, authentication_backend=authentication_backend)
 
 
@@ -46,7 +43,9 @@ app.add_middleware(
 )
 
 app.add_middleware(LoggingMiddleware, logger=logger)
-app.add_middleware(SessionMiddleware, secret_key=settings.token_secret)
+app.add_middleware(
+    SessionMiddleware, secret_key=settings.token_secret.get_secret_value()
+)
 app.add_middleware(HSTSMiddleware)
 
 

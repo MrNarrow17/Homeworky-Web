@@ -22,10 +22,13 @@ class AdminAuth(AuthenticationBackend):
         form = await request.form()
         username, password = form["username"], form["password"]
 
-        if username != settings.admin_username or password != settings.admin_password:
+        if (
+            username != settings.admin_username.get_secret_value()
+            or password != settings.admin_password.get_secret_value()
+        ):
             return False
 
-        request.session.update({"token": settings.token_secret})
+        request.session.update({"token": settings.token_secret.get_secret_value()})
 
         return True
 

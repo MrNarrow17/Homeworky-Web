@@ -5,7 +5,6 @@ from sqlalchemy import engine_from_config, pool
 from sqlmodel import SQLModel
 
 from alembic import context
-from app.config import get_settings
 from app.models.class_ import Class
 from app.models.homework import Homework
 from app.models.sessions import ClassSession, StaffSession
@@ -30,8 +29,8 @@ database_url = os.environ.get("DATABASE_URL")
 if database_url:
     config.set_main_option("sqlalchemy.url", database_url)
 else:
-    config.set_main_option(
-        "sqlalchemy.url", get_settings().database_url.get_secret_value()
+    raise ValueError(
+        "DATABASE_URL environment variable needs to be set for migrations to work"
     )
 
 target_metadata = SQLModel.metadata
