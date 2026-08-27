@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,8 +27,8 @@ class Settings(BaseSettings):
     )
     class_session_cookie: str = Field(validation_alias="CLASS_SESSION_COOKIE")
     staff_session_cookie: str = Field(validation_alias="STAFF_SESSION_COOKIE")
-    admin_username: str = Field(default="admin", validation_alias="ADMIN_USERNAME")
-    admin_password: str = Field(default="admin", validation_alias="ADMIN_PASSWORD")
+    admin_username: str = Field(validation_alias="ADMIN_USERNAME")
+    admin_password: str = Field(validation_alias="ADMIN_PASSWORD")
 
     telegram_link: str = Field(validation_alias="TELEGRAM_LINK")
 
@@ -40,6 +40,49 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+    @field_validator("admin_username")
+    def validate_admin_username(cls, v: str) -> str:
+        if not v or len(v.strip()) == 0:
+            raise ValueError("ADMIN_USERNAME must be set to a non-empty value")
+
+        insecure_usernames = {"admin", "administrator", "root", "user", "test"}
+        if v.lower() in insecure_usernames:
+            raise ValueError(
+                f"ADMIN_USERNAME cannot be set to common default value '{v}'. "
+                "Please use a unique, non-default username for security."
+            )
+
+        return v
+
+    @field_validator("admin_password")
+    def validate_admin_password(cls, v: str) -> str:
+        if not v or len(v.strip()) == 0:
+            raise ValueError("ADMIN_PASSWORD must be set to a non-empty value")
+
+        if len(v) < 12:
+            raise ValueError(
+                "ADMIN_PASSWORD must be at least 12 characters long for security"
+            )
+
+        insecure_passwords = {
+            "admin",
+            "password",
+            "123456",
+            "12345678",
+            "password123",
+            "admin123",
+            "changeme",
+            "change-me",
+            "default",
+        }
+        if v.lower() in insecure_passwords:
+            raise ValueError(
+                "ADMIN_PASSWORD cannot be set to a common default value. "
+                "Please use a strong, unique password for security."
+            )
+
+        return v
 
     @property
     def timezone(self) -> timezone:
