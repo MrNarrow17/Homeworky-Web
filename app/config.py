@@ -60,9 +60,9 @@ class Settings(BaseSettings):
         if not v or len(v.strip()) == 0:
             raise ValueError("ADMIN_PASSWORD must be set to a non-empty value")
 
-        if len(v) < 12:
+        if len(v) < 5:
             raise ValueError(
-                "ADMIN_PASSWORD must be at least 12 characters long for security"
+                "ADMIN_PASSWORD must be at least 5 characters long for security"
             )
 
         insecure_passwords = {
