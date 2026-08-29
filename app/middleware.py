@@ -1,3 +1,4 @@
+import asyncio
 import time
 from logging import Logger
 
@@ -75,4 +76,6 @@ class LoggingMiddleware:
             "duration_seconds": round(process_time, 4),
             "client_host": client_host,
         }
-        self.logger.info(f"Request processed: {method} {path}", extra=log_extra)
+        await asyncio.to_thread(
+            self.logger.info, f"Request processed: {method} {path}", extra=log_extra
+        )

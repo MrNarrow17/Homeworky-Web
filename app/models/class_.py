@@ -8,7 +8,6 @@ from app.schemas.class_ import ClassBase
 
 if TYPE_CHECKING:
     from app.models.homework import Homework
-    from app.models.sessions import AppSession
     from app.models.staff import Staff
 
 
@@ -19,7 +18,6 @@ class Class(ClassBase, table=True):
     Relationships:
         - Staff (moderators): One-to-many relationship.
         - Homework: One-to-many relationship.
-        - AppSession: One-to-many relationship.
     """
 
     id: int | None = Field(default=None, primary_key=True)
@@ -31,13 +29,6 @@ class Class(ClassBase, table=True):
     )
 
     homeworks: list["Homework"] = Relationship(
-        back_populates="class_rel",
-        sa_relationship_kwargs={
-            "cascade": "all, delete-orphan",
-        },
-    )
-
-    sessions: list["AppSession"] = Relationship(
         back_populates="class_rel",
         sa_relationship_kwargs={
             "cascade": "all, delete-orphan",

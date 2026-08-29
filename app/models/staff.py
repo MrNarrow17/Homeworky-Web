@@ -7,7 +7,6 @@ from app.config import get_settings
 
 if TYPE_CHECKING:
     from app.models.class_ import Class
-    from app.models.sessions import AppSession
 
 
 class Staff(SQLModel, table=True):
@@ -16,7 +15,6 @@ class Staff(SQLModel, table=True):
 
     Relationships:
         - Class: Many-to-one relationship.
-        - AppSession: One-to-many relationship.
     """
 
     id: int | None = Field(default=None, primary_key=True)
@@ -41,15 +39,5 @@ class Staff(SQLModel, table=True):
 
     class_rel: "Class | None" = Relationship(back_populates="moderators")
 
-    sessions: list["AppSession"] = Relationship(
-        back_populates="staff_rel",
-        sa_relationship_kwargs={
-            "cascade": "all, delete-orphan",
-        },
-    )
-
     def __str__(self) -> str:
-        """
-        Represents the string version of the Staff model.
-        """
         return self.username

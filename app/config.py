@@ -22,15 +22,10 @@ class Settings(BaseSettings):
 
     hsts_value: str = Field(validation_alias="HSTS_VALUE")
 
-    class_session_lifetime: int = Field(
-        default=315360000, validation_alias="CLASS_SESSION_LIFETIME"
+    session_cookie: str = Field(validation_alias="SESSION_COOKIE")
+    session_lifetime: int = Field(
+        default=315360000, validation_alias="SESSION_LIFETIME"
     )
-
-    staff_session_lifetime: int = Field(
-        default=3600, validation_alias="STAFF_SESSION_LIFETIME"
-    )
-    class_session_cookie: str = Field(validation_alias="CLASS_SESSION_COOKIE")
-    staff_session_cookie: str = Field(validation_alias="STAFF_SESSION_COOKIE")
 
     telegram_link: str = Field(validation_alias="TELEGRAM_LINK")
 
