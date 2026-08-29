@@ -1,7 +1,5 @@
-from __future__ import annotations
-
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -9,19 +7,39 @@ from app.config import get_settings
 
 if TYPE_CHECKING:
     from app.models.class_ import Class
-    from app.models.staff import StaffMember
-
-type AppSession = StaffSession | ClassSession
-type AppSessionModel = type[AppSession]
+    from app.models.staff import Staff
 
 
-class BaseAppSession(SQLModel):
+class AppSession(SQLModel, table=True):
     """
     Represents a base app session model.
     """
 
     id: int | None = Field(default=None, primary_key=True)
-    token_hash: str = Field(index=True)
+    token_hash: str = Field(index=True, unique=True)
+
+    created_at: datetime = Field(default_factory=lambda: get_settings().current_time)
+
+    ### Foreign Keys ###
+
+    staff_id_db: int | None = Field(
+        foreign_key="staff.id",
+        default=None,
+        ondelete="CASCADE",
+        index=True,
+    )
+
+    class_id_db: int | None = Field(
+        foreign_key="class.id",
+        default=None,
+        ondelete="CASCADE",
+        index=True,
+    )
+
+    ### Relationships ###
+
+    staff_rel: "Staff | None" = Relationship(back_populates="sessions")
+    class_rel: "Class | None" = Relationship(back_populates="sessions")
 
     ### User Agent Data ###
 
@@ -44,106 +62,35 @@ class BaseAppSession(SQLModel):
     is_pc: bool = Field(default=False)
     is_bot: bool = Field(default=False)
 
-    created_at: datetime = Field(default_factory=lambda: get_settings().current_time)
-
-
-class ClassSession(BaseAppSession, table=True):
-    """
-    Represents a class session table in the database.
-
-    Relationships:
-        - Class: Many-to-one relationship.
-    """
-
-    class_: Class = Relationship(back_populates="sessions")
-    class_id: int = Field(
-        default=None, foreign_key="class.id", ondelete="CASCADE", index=True
-    )
+    ### Factory Methods ###
 
     @classmethod
-    def from_entity(
-        cls, token_hash: str, entity_id: int, device_data: dict | None = None
-    ) -> ClassSession:
-        """Creates a ClassSession from an entity ID and optional device data."""
-        data = {"token_hash": token_hash, "class_id": entity_id}
+    def from_staff(
+        cls, token_hash: str, staff_id: int, device_data: dict | None = None
+    ) -> Self:
+        payload = {"token_hash": token_hash, "staff_id_db": staff_id}
         if device_data:
-            data.update(device_data)
-        return cls(**data)
-
-    @property
-    def is_staff(self) -> bool:
-        """
-        Returns whether the session is a staff session.
-        """
-        return False
-
-    @property
-    def staff_member(self) -> StaffMember | None:
-        """
-        Returns the staff member associated with this session, if any.
-        """
-        return None
-
-    @property
-    def staff_member_id(self) -> int | None:
-        """
-        Returns the ID of the staff member associated with this session, if any.
-        """
-        return None
-
-    def __str__(self) -> str:
-        """
-        Represents the string version of the ClassSession model.
-        """
-        return f"Session #{self.id}"
-
-
-class StaffSession(BaseAppSession, table=True):
-    """
-    Represents a staff session table in the database.
-
-    Relationships:
-        - StaffMember: Many-to-one relationship.
-    """
-
-    staff_member: StaffMember = Relationship(back_populates="sessions")
-    staff_member_id: int = Field(
-        default=None, foreign_key="staffmember.id", ondelete="CASCADE", index=True
-    )
+            payload.update(device_data)
+        return cls(**payload)
 
     @classmethod
-    def from_entity(
-        cls, token_hash: str, entity_id: int, device_data: dict | None = None
-    ) -> StaffSession:
-        """Creates a StaffSession from an entity ID and optional device data."""
-        data = {"token_hash": token_hash, "staff_member_id": entity_id}
+    def from_class(
+        cls, token_hash: str, class_id: int, device_data: dict | None = None
+    ) -> Self:
+        payload = {"token_hash": token_hash, "class_id_db": class_id}
         if device_data:
-            data.update(device_data)
-        return cls(**data)
+            payload.update(device_data)
+        return cls(**payload)
+
+    ### Properties ###
 
     @property
-    def is_staff(self) -> bool:
-        """
-        Returns whether the session is a staff session.
-        """
-        return True
+    def is_staff_session(self) -> bool:
+        return self.staff_id_db is not None
 
     @property
-    def class_(self) -> Class:
-        """
-        Returns the class of the staff member.
-        """
-        return self.staff_member.class_
-
-    @property
-    def class_id(self) -> int:
-        """
-        Returns the class ID of the staff member.
-        """
-        return self.staff_member.class_id
+    def is_class_session(self) -> bool:
+        return self.class_id_db is not None
 
     def __str__(self) -> str:
-        """
-        Represents the string version of the StaffSession model.
-        """
         return f"Session #{self.id}"

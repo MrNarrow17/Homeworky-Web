@@ -8,8 +8,8 @@ from app.schemas.class_ import ClassBase
 
 if TYPE_CHECKING:
     from app.models.homework import Homework
-    from app.models.sessions import ClassSession
-    from app.models.staff import StaffMember
+    from app.models.sessions import AppSession
+    from app.models.staff import Staff
 
 
 class Class(ClassBase, table=True):
@@ -17,39 +17,32 @@ class Class(ClassBase, table=True):
     Represents a class table in the database.
 
     Relationships:
-        - StaffMember: One-to-many relationship.
+        - Staff (moderators): One-to-many relationship.
         - Homework: One-to-many relationship.
-        - ClassSession: One-to-many relationship.
+        - AppSession: One-to-many relationship.
     """
 
     id: int | None = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=lambda: get_settings().current_time)
     hashed_password: str
 
-    staff: list["StaffMember"] = Relationship(
-        back_populates="class_",
-        sa_relationship_kwargs={
-            "cascade": "all, delete-orphan",
-        },
+    moderators: list["Staff"] = Relationship(
+        back_populates="class_rel",
     )
 
     homeworks: list["Homework"] = Relationship(
-        back_populates="class_",
+        back_populates="class_rel",
         sa_relationship_kwargs={
             "cascade": "all, delete-orphan",
         },
     )
 
-    sessions: list["ClassSession"] = Relationship(
-        back_populates="class_",
+    sessions: list["AppSession"] = Relationship(
+        back_populates="class_rel",
         sa_relationship_kwargs={
             "cascade": "all, delete-orphan",
         },
     )
 
-    def __str__(self):
-        """
-        Represents the string version of the class model.
-        """
-
+    def __str__(self) -> str:
         return self.name
