@@ -7,6 +7,7 @@ requires-python = ">=3.11"
 dependencies = [
     "fastapi[standard]",
     "redis",
+    "ruff",
     "sqlmodel",
     "alembic",
     "psycopg2-binary",
@@ -28,3 +29,6 @@ packages = ["app"]
 
 [tool.fastapi]
 entrypoint = "app.main:app"
+
+[tool.ruff.lint.per-file-ignores]
+"alembic/*" = ["F401"]

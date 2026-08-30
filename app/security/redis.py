@@ -1,6 +1,6 @@
 import secrets
 
-from fastapi import Depends, Request, Response
+from fastapi import Request, Response
 from redis import Redis
 
 from app.config import Settings, get_settings
@@ -101,9 +101,9 @@ class RedisSessionManager:
 
 
 def get_session_manager(
-    redis: Redis = Depends(get_redis_client),
+    redis: Redis | None = None,
 ) -> RedisSessionManager:
     """
     Factory function for RedisSessionManager object.
     """
-    return RedisSessionManager(redis_client=redis)
+    return RedisSessionManager(redis)

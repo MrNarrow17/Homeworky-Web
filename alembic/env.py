@@ -7,8 +7,7 @@ from sqlmodel import SQLModel
 from alembic import context
 from app.models.class_ import Class
 from app.models.homework import Homework
-from app.models.sessions import ClassSession, StaffSession
-from app.models.staff import StaffMember
+from app.models.staff import Staff
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 import wtforms
 from fastapi import Request
 from fastapi.responses import RedirectResponse
@@ -49,19 +51,10 @@ class ClassAdmin(ModelView, model=Class):
     name = "Class"
     name_plural = "Classes"
 
-    column_list = [Class.id, Class.name, Class.created_at]
-
-    form_columns = [Class.name, Class.hashed_password]
-
-    form_overrides = {
-        Class.hashed_password: wtforms.PasswordField,
-    }
-
-    form_args = {
-        "hashed_password": {
-            "label": "Password",
-        }
-    }
+    column_list: ClassVar = [Class.id, Class.name, Class.created_at]
+    form_columns: ClassVar = [Class.name, Class.hashed_password]
+    form_overrides: ClassVar = {Class.hashed_password: wtforms.PasswordField}
+    form_args: ClassVar = {"hashed_password": {"label": "Password"}}
 
     async def on_model_change(
         self, data: dict, model: Class, is_created: bool, request: Request
@@ -87,31 +80,27 @@ class StaffAdmin(ModelView, model=Staff):
     name = "Staff"
     name_plural = "Staff"
 
-    column_list = [
+    column_list: ClassVar = [
         Staff.id,
         Staff.username,
+        Staff.is_admin,
+        Staff.is_mod,
         Staff.class_rel,
         Staff.created_at,
     ]
 
-    form_columns = [
+    form_columns: ClassVar = [
         Staff.username,
+        Staff.is_admin,
+        Staff.is_mod,
         Staff.class_rel,
         Staff.hashed_password,
     ]
-
-    form_overrides = {
-        Class.hashed_password: wtforms.PasswordField,
-    }
-
-    form_args = {
-        "hashed_password": {
-            "label": "Password",
-        }
-    }
+    form_overrides: ClassVar = {Staff.hashed_password: wtforms.PasswordField}
+    form_args: ClassVar = {"hashed_password": {"label": "Password"}}
 
     async def on_model_change(
-        self, data: dict, model: Class, is_created: bool, request: Request
+        self, data: dict, model: Staff, is_created: bool, request: Request
     ) -> None:
         """
         Method called when a model is changed.

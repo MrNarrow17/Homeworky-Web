@@ -1,5 +1,8 @@
 from fastapi import Depends, HTTPException, Request, status
+from sqlmodel import Session
 
+from app.database import get_session
+from app.models.homework import Homework
 from app.schemas.sessions import AppSession
 from app.security.redis import RedisSessionManager, get_session_manager
 
@@ -9,8 +12,8 @@ class ViewerDependencies:
     FastAPI dependency methods for resolving and authorizing the current viewer.
     """
 
-    def __init__(self, session_manager: RedisSessionManager):
-        self._session_manager = session_manager
+    def __init__(self, session_manager: RedisSessionManager | None = None):
+        self._session_manager = session_manager or get_session_manager()
 
     @property
     def session_manager(self) -> RedisSessionManager:
@@ -67,9 +70,37 @@ class ViewerDependencies:
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Wrong class")
         return session
 
+    def require_class_staff(self, request: Request, class_id: int) -> int:
+        """
+        Requires a staff session authorized to view the given class.
+        """
+
+        viewer = self.require_staff(request)
+        if not viewer.can_view_class(class_id):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Wrong class")
+        return class_id
+
+    def require_homework_staff(
+        self,
+        request: Request,
+        homework_id: int,
+        db_session: Session = Depends(get_session),
+    ) -> Homework:
+        """
+        Requires a staff session authorized to view the given homework.
+        """
+
+        viewer = self.require_staff(request)
+        homework = db_session.get(Homework, homework_id)
+        if not homework:
+            raise HTTPException(status_code=404, detail="Homework not found")
+        if not viewer.can_view_class(homework.class_id_db):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Forbidden")
+        return homework
+
 
 def get_viewer_dependencies(
-    session_manager: RedisSessionManager = Depends(get_session_manager),
+    session_manager: RedisSessionManager | None = None,
 ) -> ViewerDependencies:
     """
     Factory function for a ViewerDependencies object.

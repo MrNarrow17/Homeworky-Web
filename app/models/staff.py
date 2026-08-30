@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -37,7 +37,7 @@ class Staff(SQLModel, table=True):
 
     ### Relationships ###
 
-    class_rel: "Class | None" = Relationship(back_populates="moderators")
+    class_rel: Optional["Class"] = Relationship(back_populates="moderators")
 
     def __str__(self) -> str:
         return self.username
