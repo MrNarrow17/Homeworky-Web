@@ -22,7 +22,7 @@ class Staff(SQLModel, table=True):
     hashed_password: str
 
     is_admin: bool = Field(default=False)
-    is_moderator: bool = Field(default=False)
+    is_mod: bool = Field(default=False)
 
     created_at: datetime = Field(default_factory=lambda: get_settings().current_time)
 

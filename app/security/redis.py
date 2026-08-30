@@ -1,10 +1,10 @@
 import secrets
 
-from fastapi import Request, Response
+from fastapi import Depends, Request, Response
 from redis import Redis
-from user_agents import parse
 
 from app.config import Settings, get_settings
+from app.database import get_redis_client
 from app.schemas.sessions import AppSession
 from app.security.hashing import PasswordSecurity, get_password_security
 
@@ -12,40 +12,18 @@ from app.security.hashing import PasswordSecurity, get_password_security
 class RedisSessionManager:
     def __init__(
         self,
-        redis_client: Redis,
+        redis_client: Redis | None = None,
         settings: Settings | None = None,
         password_security: PasswordSecurity | None = None,
     ):
-        self._redis_client = redis_client
+        self._redis_client = redis_client or get_redis_client()
         self._settings = settings or get_settings()
         self._password_security = password_security or get_password_security()
         self._session_cookie = self._settings.session_cookie
-        self._session_lifetime = self._settings.session_lifetime
 
-    def get_user_agent_from_request(self, request: Request) -> dict | None:
-        """
-        Gets the user agent string from a request then parses it to dict
-        """
-        user_agent_string = request.headers.get("user-agent")
-        if user_agent_string:
-            ua = parse(user_agent_string)
-            return {
-                "raw_user_agent": user_agent_string,
-                "device_family": ua.device.family,
-                "device_brand": ua.device.brand,
-                "device_model": ua.device.model,
-                "client_ip": request.client.host if request.client else None,
-                "os_family": ua.os.family,
-                "os_version": ua.os.version_string,
-                "browser_family": ua.browser.family,
-                "browser_version": ua.browser.version_string,
-                "is_mobile": ua.is_mobile,
-                "is_tablet": ua.is_tablet,
-                "is_pc": ua.is_pc,
-                "is_bot": ua.is_bot,
-            }
-
-    def set_session_cookie(self, response: Response, token: str) -> Response:
+    def set_session_cookie(
+        self, response: Response, token: str, lifetime: int
+    ) -> Response:
         """
         Sets the session cookie in the response with the given token.
         """
@@ -54,7 +32,7 @@ class RedisSessionManager:
             key=self._session_cookie,
             value=token,
             httponly=True,
-            max_age=self._session_lifetime,
+            max_age=lifetime,
             samesite="lax",
             secure=not self._settings.debug_mode,
             path="/",
@@ -80,35 +58,38 @@ class RedisSessionManager:
         Issues a new session for the given user and sets the session cookie in the response.
         """
 
+        if not session.is_authenticated:
+            raise ValueError("Cannot issue session for non-authenticated user")
+
         opaque_token = secrets.token_urlsafe(64)
         token_hash = self._password_security.hash_token(opaque_token)
-        redis_key = f"session:{token_hash}"
 
         self._redis_client.setex(
-            name=redis_key, time=self._session_lifetime, value=session.model_dump_json()
+            name=f"session:{token_hash}",
+            time=session.lifetime,
+            value=session.model_dump_json(),
         )
 
-        return self.set_session_cookie(response, opaque_token)
+        return self.set_session_cookie(response, opaque_token, session.lifetime)
 
-    def get_session(self, request: Request) -> AppSession | None:
+    def get_session(self, request: Request) -> AppSession:
         """
         Retrieves the session for the given request.
         """
+
         opaque_token = request.cookies.get(self._session_cookie)
         if not opaque_token:
-            return None
+            return AppSession.from_raw_data(None)
 
         token_hash = self._password_security.hash_token(opaque_token)
         raw_data = self._redis_client.get(f"session:{token_hash}")
-        if not raw_data:
-            return None
-
-        return AppSession.model_validate_json(raw_data)
+        return AppSession.from_raw_data(raw_data)
 
     def invalidate_session(self, request: Request, response: Response) -> Response:
         """
         Invalidates the session for the given request and response.
         """
+
         opaque_token = request.cookies.get(self._session_cookie)
         if not opaque_token:
             return response
@@ -119,6 +100,10 @@ class RedisSessionManager:
         return self.delete_session_cookie(response)
 
 
-def get_session_manager(redis: Redis) -> RedisSessionManager:
-    """FastAPI dependency provider for RedisSessionManager."""
+def get_session_manager(
+    redis: Redis = Depends(get_redis_client),
+) -> RedisSessionManager:
+    """
+    Factory function for RedisSessionManager object.
+    """
     return RedisSessionManager(redis_client=redis)

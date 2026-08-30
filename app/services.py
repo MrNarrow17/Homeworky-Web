@@ -1,7 +1,9 @@
 from collections.abc import Sequence
 from datetime import date as date_type
 
+from fastapi import Request
 from sqlmodel import Session, col, func, select
+from user_agents import parse
 
 from app.models.homework import Homework
 
@@ -70,3 +72,29 @@ class HomeworkService:
 
         statement = select(func.count()).where(Homework.class_id_db == class_id)
         return db_session.exec(statement).one()
+
+
+class SessionService:
+    @staticmethod
+    def get_user_agent_from_request(request: Request) -> dict | None:
+        """
+        Gets the user agent string from a request then parses it to dict
+        """
+        user_agent_string = request.headers.get("user-agent")
+        if user_agent_string:
+            ua = parse(user_agent_string)
+            return {
+                "raw_user_agent": user_agent_string,
+                "device_family": ua.device.family,
+                "device_brand": ua.device.brand,
+                "device_model": ua.device.model,
+                "client_ip": request.client.host if request.client else None,
+                "os_family": ua.os.family,
+                "os_version": ua.os.version_string,
+                "browser_family": ua.browser.family,
+                "browser_version": ua.browser.version_string,
+                "is_mobile": ua.is_mobile,
+                "is_tablet": ua.is_tablet,
+                "is_pc": ua.is_pc,
+                "is_bot": ua.is_bot,
+            }

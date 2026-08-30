@@ -6,6 +6,7 @@ uploads/*
 !uploads/.gitkeep
 .sonar
 repomix-output.xml
+repomix-output-*.xml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

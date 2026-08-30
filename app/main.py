@@ -58,7 +58,7 @@ admin.add_view(StaffAdmin)
 
 
 @app.get("/")
-async def root():
+def root():
     """
     Redirects to the classes page.
     """
@@ -66,7 +66,7 @@ async def root():
 
 
 @app.head("/")
-async def root_head():
+def root_head():
     """
     Returns a 200 OK response for the health check.
     """
@@ -74,7 +74,7 @@ async def root_head():
 
 
 @app.get("/health")
-async def health():
+def health():
     """
     Returns a 200 OK response for the health check.
     """

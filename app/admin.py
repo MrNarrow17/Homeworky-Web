@@ -6,11 +6,11 @@ from sqladmin.authentication import AuthenticationBackend
 
 from app.config import get_settings
 from app.models.class_ import Class
-from app.models.staff import StaffMember
-from app.security import get_general_security
+from app.models.staff import Staff
+from app.security.hashing import get_password_security
 
 settings = get_settings()
-security = get_general_security()
+security = get_password_security()
 
 
 class AdminAuth(AuthenticationBackend):
@@ -79,7 +79,7 @@ class ClassAdmin(ModelView, model=Class):
             data["hashed_password"] = model.hashed_password
 
 
-class StaffAdmin(ModelView, model=StaffMember):
+class StaffAdmin(ModelView, model=Staff):
     """
     Admin view for the StaffMember model.
     """
@@ -88,16 +88,16 @@ class StaffAdmin(ModelView, model=StaffMember):
     name_plural = "Staff"
 
     column_list = [
-        StaffMember.id,
-        StaffMember.username,
-        StaffMember.class_,
-        StaffMember.created_at,
+        Staff.id,
+        Staff.username,
+        Staff.class_rel,
+        Staff.created_at,
     ]
 
     form_columns = [
-        StaffMember.username,
-        StaffMember.class_,
-        StaffMember.hashed_password,
+        Staff.username,
+        Staff.class_rel,
+        Staff.hashed_password,
     ]
 
     form_overrides = {

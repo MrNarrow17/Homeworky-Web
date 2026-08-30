@@ -11,21 +11,25 @@ class Settings(BaseSettings):
     """
 
     app_name: str = Field(default="Homework APP", validation_alias="APP_NAME")
-    debug_mode: bool = Field(default=False, validation_alias="DEBUG_MODE")
-
     time_delta: int = Field(default=3, validation_alias="TIMEDELTA")
+    debug_mode: bool = Field(default=False, validation_alias="DEBUG_MODE")
+    token_secret: SecretStr = Field(validation_alias="TOKEN_SECRET")
 
     database_url: SecretStr = Field(validation_alias="DATABASE_URL")
-    token_secret: SecretStr = Field(validation_alias="TOKEN_SECRET")
+    redis_url: SecretStr = Field(validation_alias="REDIS_URL")
+
+    session_cookie: str = Field(validation_alias="SESSION_COOKIE")
+    staff_session_lifetime: int = Field(
+        default=3600, validation_alias="STAFF_SESSION_LIFETIME"
+    )
+    class_session_lifetime: int = Field(
+        default=315360000, validation_alias="CLASS_SESSION_LIFETIME"
+    )
+
     admin_username: SecretStr = Field(validation_alias="ADMIN_USERNAME")
     admin_password: SecretStr = Field(validation_alias="ADMIN_PASSWORD")
 
     hsts_value: str = Field(validation_alias="HSTS_VALUE")
-
-    session_cookie: str = Field(validation_alias="SESSION_COOKIE")
-    session_lifetime: int = Field(
-        default=315360000, validation_alias="SESSION_LIFETIME"
-    )
 
     telegram_link: str = Field(validation_alias="TELEGRAM_LINK")
 
