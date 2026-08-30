@@ -9,10 +9,12 @@ from sqladmin.authentication import AuthenticationBackend
 from app.config import get_settings
 from app.models.class_ import Class
 from app.models.staff import Staff
+from app.security import get_session_manager
 from app.security.hashing import get_password_security
 
-settings = get_settings()
+session_manager = get_session_manager()
 security = get_password_security()
+settings = get_settings()
 
 
 class AdminAuth(AuthenticationBackend):
@@ -113,3 +115,5 @@ class StaffAdmin(ModelView, model=Staff):
 
         elif not is_created:
             data["hashed_password"] = model.hashed_password
+
+        await session_manager.revoke_all_staff_sessions(model.id)

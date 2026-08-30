@@ -21,6 +21,7 @@ from app.database import get_session
 from app.models.class_ import Class
 from app.models.homework import Homework
 from app.models.staff import Staff
+from app.rate_limiting import get_rate_limiter_service
 from app.schemas.class_ import ClassPublic
 from app.schemas.homework import HomeworkForm
 from app.schemas.sessions import AppSession
@@ -39,6 +40,7 @@ templates = Jinja2Templates(directory="app/templates/staff")
 viewer_deps = get_viewer_dependencies()
 session_manager = get_session_manager()
 password_security = get_password_security()
+rate_limiter = get_rate_limiter_service()
 settings = get_settings()
 
 
@@ -53,6 +55,7 @@ async def staff_login_post(
     credentials: LoginRequest,
     response: Response,
     db_session: Session = Depends(get_session),
+    _=Depends(rate_limiter.get_limiter_dependency),
 ):
     staff = db_session.exec(
         select(Staff).where(Staff.username == credentials.username)

@@ -7,6 +7,7 @@ from sqlmodel import Session, select
 from app.config import get_settings
 from app.database import get_session
 from app.models.class_ import Class
+from app.rate_limiting import get_rate_limiter_service
 from app.schemas.class_ import ClassJoin, ClassPublic
 from app.schemas.sessions import AppSession
 from app.security import (
@@ -23,6 +24,7 @@ templates = Jinja2Templates(directory="app/templates/classes")
 viewer_deps = get_viewer_dependencies()
 session_manager = get_session_manager()
 password_security = get_password_security()
+rate_limiter = get_rate_limiter_service()
 settings = get_settings()
 
 
@@ -52,6 +54,7 @@ async def join_class(
     request: Request,
     response: Response,
     db_session: Session = Depends(get_session),
+    _=Depends(rate_limiter.get_limiter_dependency),
 ):
     db_class = db_session.get(Class, data.id)
 

@@ -6,6 +6,8 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi[standard]",
+    "fastapi-limiter",
+    "pyrate-limiter",
     "redis",
     "ruff",
     "sqlmodel",

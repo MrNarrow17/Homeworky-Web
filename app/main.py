@@ -3,7 +3,6 @@ from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import Depends, FastAPI, Request, Response
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from sqladmin import Admin
@@ -34,14 +33,6 @@ app = FastAPI(title="My FastAPI App", version="1.0.0", lifespan=lifespan)
 authentication_backend = AdminAuth(secret_key=settings.token_secret.get_secret_value())
 admin = Admin(app, engine, authentication_backend=authentication_backend)
 
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 app.add_middleware(LoggingMiddleware, logger=logger)
 app.add_middleware(

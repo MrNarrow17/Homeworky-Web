@@ -72,6 +72,11 @@ class RedisSessionManager:
                 value=session.model_dump_json(),
             )
 
+            if session.staff_id:
+                index_key = f"staff_sessions:{session.staff_id}"
+                await self._redis_client.sadd(index_key, token_hash)
+                await self._redis_client.expire(index_key, session.lifetime)
+
             return self.set_session_cookie(response, opaque_token, session.lifetime)
         except RedisError:
             raise RuntimeError("Failed to connect to Redis")
@@ -105,9 +110,29 @@ class RedisSessionManager:
                 return response
 
             token_hash = await self._password_security.hash_token(opaque_token)
-            await self._redis_client.delete(f"session:{token_hash}")
 
+            raw_data = await self._redis_client.get(f"session:{token_hash}")
+            session = AppSession.from_raw_data(raw_data)
+            if session.staff_id:
+                await self._redis_client.srem(
+                    f"staff_sessions:{session.staff_id}", token_hash
+                )
+
+            await self._redis_client.delete(f"session:{token_hash}")
             return self.delete_session_cookie(response)
+        except RedisError:
+            raise RuntimeError("Failed to connect to Redis")
+
+    async def revoke_all_staff_sessions(self, staff_id: int) -> None:
+        """
+        Invalidates every active session for the given staff member.
+        """
+        try:
+            index_key = f"staff_sessions:{staff_id}"
+            token_hashes = await self._redis_client.smembers(index_key)
+            if token_hashes:
+                await self._redis_client.delete(*(f"session:{h}" for h in token_hashes))
+            await self._redis_client.delete(index_key)
         except RedisError:
             raise RuntimeError("Failed to connect to Redis")
 

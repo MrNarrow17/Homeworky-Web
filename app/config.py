@@ -17,6 +17,8 @@ class Settings(BaseSettings):
 
     database_url: SecretStr = Field(validation_alias="DATABASE_URL")
     redis_url: SecretStr = Field(validation_alias="REDIS_URL")
+    bucket_key: str = Field(default="rate-limit", validation_alias="BUCKET_KEY")
+    rate_limit: int = Field(default=5, validation_alias="RATE_LIMIT")
 
     session_cookie: str = Field(validation_alias="SESSION_COOKIE")
     staff_session_lifetime: int = Field(
