@@ -277,12 +277,12 @@
             <div class="d-flex align-items-center justify-content-between mb-4 gap-2 flex-wrap">
                 <!-- Context-aware back/logout button -->
                 {% if viewer and viewer.is_staff %}
-                    <a href="/staff/dashboard/" class="btn-ghost">
-                        <i class="bi bi-arrow-left"></i> До панелі модератора
+                    <a href="/staff/classes/{{ class_item.id }}/dashboard/" class="btn-ghost">
+                        <i class="bi bi-arrow-left"></i> До панелі класу
                     </a>
                 {% else %}
                     <a href="/classes/exit/" class="btn-ghost">
-                        <i class="bi bi-box-arrow-right"></i> Вийти з класу
+                        <i class="bi bi-box-arrow-left"></i> Вийти з класу
                     </a>
                 {% endif %}
                 <span class="id-chip">ID класу: #{{ class_item.id }}</span>

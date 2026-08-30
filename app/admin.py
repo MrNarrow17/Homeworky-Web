@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 import wtforms
 from fastapi import Request
 from fastapi.responses import RedirectResponse
@@ -6,11 +8,13 @@ from sqladmin.authentication import AuthenticationBackend
 
 from app.config import get_settings
 from app.models.class_ import Class
-from app.models.staff import StaffMember
-from app.security import get_general_security
+from app.models.staff import Staff
+from app.security import get_session_manager
+from app.security.hashing import get_password_security
 
+session_manager = get_session_manager()
+security = get_password_security()
 settings = get_settings()
-security = get_general_security()
 
 
 class AdminAuth(AuthenticationBackend):
@@ -49,19 +53,10 @@ class ClassAdmin(ModelView, model=Class):
     name = "Class"
     name_plural = "Classes"
 
-    column_list = [Class.id, Class.name, Class.created_at]
-
-    form_columns = [Class.name, Class.hashed_password]
-
-    form_overrides = {
-        Class.hashed_password: wtforms.PasswordField,
-    }
-
-    form_args = {
-        "hashed_password": {
-            "label": "Password",
-        }
-    }
+    column_list: ClassVar = [Class.id, Class.name, Class.created_at]
+    form_columns: ClassVar = [Class.name, Class.hashed_password]
+    form_overrides: ClassVar = {Class.hashed_password: wtforms.PasswordField}
+    form_args: ClassVar = {"hashed_password": {"label": "Password"}}
 
     async def on_model_change(
         self, data: dict, model: Class, is_created: bool, request: Request
@@ -71,7 +66,7 @@ class ClassAdmin(ModelView, model=Class):
         """
         raw_password = data.get("hashed_password")
         if raw_password:
-            secure_hash = security.hash_password(raw_password)
+            secure_hash = await security.hash_password(raw_password)
             data["hashed_password"] = secure_hash
             model.hashed_password = secure_hash
 
@@ -79,7 +74,7 @@ class ClassAdmin(ModelView, model=Class):
             data["hashed_password"] = model.hashed_password
 
 
-class StaffAdmin(ModelView, model=StaffMember):
+class StaffAdmin(ModelView, model=Staff):
     """
     Admin view for the StaffMember model.
     """
@@ -87,40 +82,38 @@ class StaffAdmin(ModelView, model=StaffMember):
     name = "Staff"
     name_plural = "Staff"
 
-    column_list = [
-        StaffMember.id,
-        StaffMember.username,
-        StaffMember.class_,
-        StaffMember.created_at,
+    column_list: ClassVar = [
+        Staff.id,
+        Staff.username,
+        Staff.is_admin,
+        Staff.is_mod,
+        Staff.classes,
+        Staff.created_at,
     ]
 
-    form_columns = [
-        StaffMember.username,
-        StaffMember.class_,
-        StaffMember.hashed_password,
+    form_columns: ClassVar = [
+        Staff.username,
+        Staff.is_admin,
+        Staff.is_mod,
+        Staff.classes,
+        Staff.hashed_password,
     ]
-
-    form_overrides = {
-        Class.hashed_password: wtforms.PasswordField,
-    }
-
-    form_args = {
-        "hashed_password": {
-            "label": "Password",
-        }
-    }
+    form_overrides: ClassVar = {Staff.hashed_password: wtforms.PasswordField}
+    form_args: ClassVar = {"hashed_password": {"label": "Password"}}
 
     async def on_model_change(
-        self, data: dict, model: Class, is_created: bool, request: Request
+        self, data: dict, model: Staff, is_created: bool, request: Request
     ) -> None:
         """
         Method called when a model is changed.
         """
         raw_password = data.get("hashed_password")
         if raw_password:
-            secure_hash = security.hash_password(raw_password)
+            secure_hash = await security.hash_password(raw_password)
             data["hashed_password"] = secure_hash
             model.hashed_password = secure_hash
 
         elif not is_created:
             data["hashed_password"] = model.hashed_password
+
+        await session_manager.revoke_all_staff_sessions(model.id)

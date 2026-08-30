@@ -4,41 +4,34 @@ from typing import TYPE_CHECKING
 from sqlmodel import Field, Relationship, SQLModel
 
 from app.config import get_settings
+from app.models.links import StaffClassLink
 
 if TYPE_CHECKING:
     from app.models.class_ import Class
-    from app.models.sessions import StaffSession
 
 
-class StaffMember(SQLModel, table=True):
+class Staff(SQLModel, table=True):
     """
-    Represents a staff member table in the database.
+    Represents a staff table in the database.
 
     Relationships:
         - Class: Many-to-one relationship.
-        - StaffSession: One-to-many relationship.
     """
 
     id: int | None = Field(default=None, primary_key=True)
     username: str = Field(unique=True, index=True)
-    created_at: datetime = Field(default_factory=lambda: get_settings().current_time)
     hashed_password: str
 
-    class_: "Class" = Relationship(back_populates="staff")
-    class_id: int = Field(
-        foreign_key="class.id",
-        ondelete="CASCADE",
-    )
+    is_admin: bool = Field(default=False)
+    is_mod: bool = Field(default=False)
 
-    sessions: list["StaffSession"] = Relationship(
-        back_populates="staff_member",
-        sa_relationship_kwargs={
-            "cascade": "all, delete-orphan",
-        },
+    created_at: datetime = Field(default_factory=lambda: get_settings().current_time)
+
+    ### Relationships ###
+
+    classes: list["Class"] = Relationship(
+        back_populates="moderators", link_model=StaffClassLink
     )
 
     def __str__(self) -> str:
-        """
-        Represents the string version of the StaffMember model.
-        """
         return self.username

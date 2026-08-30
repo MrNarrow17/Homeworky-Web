@@ -83,7 +83,7 @@
             </header>
 
             <div class="surface-card">
-                <form method="POST" action="/staff/homework/{% if homework %}{{ homework.id }}/edit/{% else %}new/{% endif %}" enctype="multipart/form-data" id="hwForm">
+                <form method="POST" action="{% if homework %}/staff/homework/{{ homework.id }}/edit/{% else %}/staff/classes/{{ class_id }}/homework/new/{% endif %}" enctype="multipart/form-data" id="hwForm">
                     
                     <div class="mb-3">
                         <label class="field-label">Предмет</label>

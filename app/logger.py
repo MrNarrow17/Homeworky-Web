@@ -36,7 +36,7 @@ class AppLogger:
 
     def __init__(
         self,
-        json_formatter: type[JsonFormatter],
+        json_formatter: type[JsonFormatter] | None = None,
         name: str | None = None,
         level: int = INFO,
     ) -> None:
@@ -46,7 +46,7 @@ class AppLogger:
         self._logger = logging.getLogger(self.name)
         self._logger.setLevel(self.level)
 
-        self._json_formatter = json_formatter
+        self._json_formatter = json_formatter or CloudJSONFormatter
 
         if not self._logger.handlers:
             self._add_json_handler()
@@ -65,4 +65,4 @@ class AppLogger:
 
 @lru_cache(maxsize=1)
 def get_app_logger() -> AppLogger:
-    return AppLogger(json_formatter=CloudJSONFormatter)
+    return AppLogger()

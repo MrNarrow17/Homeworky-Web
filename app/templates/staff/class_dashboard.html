@@ -230,8 +230,8 @@
 
             <!-- Top Bar -->
             <div class="topbar">
-                <a href="/staff/logout/" class="btn-logout">
-                    <i class="bi bi-box-arrow-left me-1"></i> Вийти
+                <a href="/staff/dashboard/" class="btn-logout">
+                    <i class="bi bi-arrow-left me-1"></i> До списку класів
                 </a>
                 <a href="/classes/{{ class_.id }}" class="btn-accent">
                     <i class="bi bi-search"></i> Переглянути клас
@@ -289,7 +289,7 @@
                 </div>
                 <div class="row g-3">
                     <div class="col-12 col-md-4">
-                        <a href="/staff/homework/new?class_id={{ class_.id }}" class="action-card">
+                        <a href="/staff/classes/{{ class_.id }}/homework/new/" class="action-card">
                             <div class="action-icon"><i class="bi bi-plus-lg"></i></div>
                             <div class="action-title">Додати домашнє</div>
                             <div class="action-description">Створити нове домашнє завдання для класу.</div>
@@ -303,7 +303,7 @@
                         </a>
                     </div>
                     <div class="col-12 col-md-4">
-                        <a href="/staff/homework/" class="action-card">
+                        <a href="/staff/classes/{{ class_.id }}/homework/" class="action-card">
                             <div class="action-icon"><i class="bi bi-journal-bookmark"></i></div>
                             <div class="action-title">Усі домашні</div>
                             <div class="action-description">Переглянути та керувати всіми завданнями класу.</div>
@@ -332,13 +332,6 @@
                         <div>
                             <div class="info-label">ID класу</div>
                             <div class="info-value">{{ class_.id }}</div>
-                        </div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-icon"><i class="bi bi-person-badge"></i></div>
-                        <div>
-                            <div class="info-label">Модератор</div>
-                            <div class="info-value">{{ staff.username }}</div>
                         </div>
                     </div>
                 </div>
