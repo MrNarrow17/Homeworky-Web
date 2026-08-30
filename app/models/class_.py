@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from sqlmodel import Field, Relationship
 
 from app.config import get_settings
+from app.models.links import StaffClassLink
 from app.schemas.class_ import ClassBase
 
 if TYPE_CHECKING:
@@ -24,8 +25,10 @@ class Class(ClassBase, table=True):
     created_at: datetime = Field(default_factory=lambda: get_settings().current_time)
     hashed_password: str
 
+    ### Relationships ###
+
     moderators: list["Staff"] = Relationship(
-        back_populates="class_rel",
+        back_populates="classes", link_model=StaffClassLink
     )
 
     homeworks: list["Homework"] = Relationship(

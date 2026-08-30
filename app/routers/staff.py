@@ -14,7 +14,7 @@ from fastapi.exceptions import HTTPException
 from fastapi.requests import Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from app.config import get_settings
 from app.database import get_session
@@ -81,14 +81,20 @@ async def staff_dashboard_redirect(
     viewer: AppSession = Depends(viewer_deps.require_staff),
     db_session: Session = Depends(get_session),
 ):
-    if viewer.class_id:
-        return RedirectResponse(url=f"/staff/classes/{viewer.class_id}/dashboard/")
 
-    classes = db_session.exec(select(Class)).all()
+    statement = (
+        select(Class).where(col(Class.id).in_(viewer.staff_class_ids))
+        if viewer.is_mod
+        else select(Class)
+    )
+    classes = db_session.exec(statement).all()
     return templates.TemplateResponse(
         request=request,
-        name="admin_class_picker.html",
-        context={"classes": [ClassPublic.model_validate(c) for c in classes]},
+        name="staff_class_picker.html",
+        context={
+            "classes": [ClassPublic.model_validate(c) for c in classes],
+            "staff_role": "Адміністратор" if viewer.is_admin else "Модератор",
+        },
     )
 
 
@@ -118,7 +124,7 @@ async def class_dashboard(
         "week_homework_count": week_homework_count,
     }
     return templates.TemplateResponse(
-        request=request, name="mod_dashboard.html", context=context
+        request=request, name="class_dashboard.html", context=context
     )
 
 

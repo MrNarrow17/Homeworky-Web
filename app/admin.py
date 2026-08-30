@@ -85,7 +85,7 @@ class StaffAdmin(ModelView, model=Staff):
         Staff.username,
         Staff.is_admin,
         Staff.is_mod,
-        Staff.class_rel,
+        Staff.classes,
         Staff.created_at,
     ]
 
@@ -93,7 +93,7 @@ class StaffAdmin(ModelView, model=Staff):
         Staff.username,
         Staff.is_admin,
         Staff.is_mod,
-        Staff.class_rel,
+        Staff.classes,
         Staff.hashed_password,
     ]
     form_overrides: ClassVar = {Staff.hashed_password: wtforms.PasswordField}

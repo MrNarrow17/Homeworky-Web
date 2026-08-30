@@ -43,7 +43,7 @@
                 <div class="d-flex align-items-center gap-2">
                     <span class="meta-date">
                         <i class="bi bi-calendar3"></i>
-                        {{ hw.date.strftime("%d.%m.%Y") if hw.date else "Не вказано" }}
+                        Здати на {{ hw.date.strftime("%d.%m.%Y") if hw.date else "-" }}
                     </span>
                     {% if viewer and viewer.is_staff %}
                     <div class="d-flex align-items-center ms-2 border-start" style="border-color: var(--line) !important; padding-left: .5rem;">

@@ -19,6 +19,7 @@ class AppSession(SQLModel):
     """
 
     staff_id: int | None = None
+    staff_class_ids: list[int] = []
     class_id: int | None = None
     lifetime: int = 0
     is_admin: bool = False
@@ -46,7 +47,7 @@ class AppSession(SQLModel):
     def from_staff(cls, request: Request, staff: "Staff") -> Self:
         return cls(
             staff_id=staff.id,
-            class_id=staff.class_id_db,
+            staff_class_ids=[c.id for c in staff.classes],
             lifetime=settings.staff_session_lifetime,
             is_admin=staff.is_admin,
             is_mod=staff.is_mod,
@@ -62,7 +63,9 @@ class AppSession(SQLModel):
     def can_view_class(self, class_id: int) -> bool:
         """Returns whether the viewer can view the given class."""
         return (
-            self.class_id == class_id or self.is_admin
+            self.class_id == class_id
+            or class_id in self.staff_class_ids
+            or self.is_admin
             if self.is_authenticated
             else False
         )

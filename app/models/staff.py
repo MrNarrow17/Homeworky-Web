@@ -1,9 +1,10 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from sqlmodel import Field, Relationship, SQLModel
 
 from app.config import get_settings
+from app.models.links import StaffClassLink
 
 if TYPE_CHECKING:
     from app.models.class_ import Class
@@ -26,18 +27,11 @@ class Staff(SQLModel, table=True):
 
     created_at: datetime = Field(default_factory=lambda: get_settings().current_time)
 
-    ### Foreign Keys ###
-
-    class_id_db: int | None = Field(
-        foreign_key="class.id",
-        index=True,
-        default=None,
-        ondelete="CASCADE",
-    )
-
     ### Relationships ###
 
-    class_rel: Optional["Class"] = Relationship(back_populates="moderators")
+    classes: list["Class"] = Relationship(
+        back_populates="moderators", link_model=StaffClassLink
+    )
 
     def __str__(self) -> str:
         return self.username
