@@ -57,13 +57,13 @@ async def staff_login_post(
     staff = db_session.exec(
         select(Staff).where(Staff.username == credentials.username)
     ).first()
-    if not staff or not password_security.verify_password(
+    if not staff or not await password_security.verify_password(
         credentials.password, staff.hashed_password
     ):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    session_manager.invalidate_session(request, response)
-    session_manager.issue_session(response, AppSession.from_staff(request, staff))
+    await session_manager.invalidate_session(request, response)
+    await session_manager.issue_session(response, AppSession.from_staff(request, staff))
 
     return LoginResponse(redirect_url="/staff/dashboard")
 
@@ -71,7 +71,7 @@ async def staff_login_post(
 @router.get("/logout/", response_class=RedirectResponse)
 async def staff_logout(request: Request, db_session: Session = Depends(get_session)):
     response = RedirectResponse(url="/classes", status_code=303)
-    session_manager.invalidate_session(request, response)
+    await session_manager.invalidate_session(request, response)
     return response
 
 

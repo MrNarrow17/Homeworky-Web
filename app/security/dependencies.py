@@ -23,64 +23,64 @@ class ViewerDependencies:
 
         return self._session_manager
 
-    def get_viewer(self, request: Request) -> AppSession:
+    async def get_viewer(self, request: Request) -> AppSession:
         """
         Returns the current session, or an unauthenticated null-object AppSession.
         """
 
-        return self._session_manager.get_session(request)
+        return await self._session_manager.get_session(request)
 
-    def require_any(self, request: Request) -> AppSession:
+    async def require_any(self, request: Request) -> AppSession:
         """
         Requires any valid session (staff or class).
         """
 
-        session = self.get_viewer(request)
+        session = await self.get_viewer(request)
         if not session.is_authenticated:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Unauthorized")
         return session
 
-    def require_staff(self, request: Request) -> AppSession:
+    async def require_staff(self, request: Request) -> AppSession:
         """
         Requires a staff (or admin) session.
         """
 
-        session = self.require_any(request)
+        session = await self.require_any(request)
         if not session.is_staff:
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Staff required")
         return session
 
-    def require_admin(self, request: Request) -> AppSession:
+    async def require_admin(self, request: Request) -> AppSession:
         """
         Requires an admin session.
         """
 
-        session = self.require_any(request)
+        session = await self.require_any(request)
         if not session.is_admin:
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Admin required")
         return session
 
-    def require_class_any(self, class_id: int, request: Request) -> AppSession:
+    async def require_class_any(self, class_id: int, request: Request) -> AppSession:
         """
         Requires a session (staff or class) authorized to view the given class.
         """
 
-        session = self.require_any(request)
+        session = await self.require_any(request)
         if not session.can_view_class(class_id):
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Wrong class")
         return session
 
-    def require_class_staff(self, request: Request, class_id: int) -> int:
+    async def require_class_staff(self, request: Request, class_id: int) -> int:
         """
         Requires a staff session authorized to view the given class.
         """
 
-        viewer = self.require_staff(request)
+        viewer = await self.require_staff(request)
         if not viewer.can_view_class(class_id):
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Wrong class")
         return class_id
 
-    def require_homework_staff(
+    async def require_homework_staff(
         self,
         request: Request,
         homework_id: int,
@@ -90,7 +90,7 @@ class ViewerDependencies:
         Requires a staff session authorized to view the given homework.
         """
 
-        viewer = self.require_staff(request)
+        viewer = await self.require_staff(request)
         homework = db_session.get(Homework, homework_id)
         if not homework:
             raise HTTPException(status_code=404, detail="Homework not found")

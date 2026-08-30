@@ -58,19 +58,23 @@ async def join_class(
     if not db_class:
         raise HTTPException(status_code=404, detail="Class not found")
 
-    if not password_security.verify_password(data.password, db_class.hashed_password):
+    if not await password_security.verify_password(
+        data.password, db_class.hashed_password
+    ):
         raise HTTPException(status_code=401, detail="Wrong password")
 
-    session_manager.invalidate_session(request, response)
-    session_manager.issue_session(response, AppSession.from_class(request, db_class))
+    await session_manager.invalidate_session(request, response)
+    await session_manager.issue_session(
+        response, AppSession.from_class(request, db_class)
+    )
 
     return db_class
 
 
 @router.get("/exit/")
-def logout(request: Request, db_session: Session = Depends(get_session)):
+async def logout(request: Request, db_session: Session = Depends(get_session)):
     response = RedirectResponse(url="/classes", status_code=303)
-    session_manager.invalidate_session(request, response)
+    await session_manager.invalidate_session(request, response)
     return response
 
 
@@ -111,7 +115,7 @@ async def get_class(
 
 
 @router.get("/{class_id}/homework/", response_class=HTMLResponse)
-def get_homework_for_week(
+async def get_homework_for_week(
     request: Request,
     class_id: int,
     week: int = Query(...),

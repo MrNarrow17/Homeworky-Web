@@ -1,3 +1,4 @@
+import asyncio
 import hmac
 from functools import lru_cache
 
@@ -23,33 +24,41 @@ class PasswordSecurity:
 
     ### Token Hashing ###
 
-    def hash_token(self, opaque_token: str) -> str:
+    async def hash_token(self, opaque_token: str) -> str:
         """
         Hashes the given opaque token using the token secret with a sha256 hash.
         """
 
-        return hmac.new(
-            self._token_secret, opaque_token.encode("utf-8"), "sha256"
-        ).hexdigest()
+        return await asyncio.to_thread(
+            lambda: hmac.new(
+                self._token_secret, opaque_token.encode("utf-8"), "sha256"
+            ).hexdigest()
+        )
 
     ### Password Hashing ###
 
-    def hash_password(self, plain_password: str) -> str:
+    async def hash_password(self, plain_password: str) -> str:
         """
         Hashes the given plain password using bcrypt.
         """
 
-        salt = bcrypt.gensalt()
-        hashed = bcrypt.hashpw(plain_password.encode("utf-8"), salt)
+        def _hash():
+            salt = bcrypt.gensalt()
+            return bcrypt.hashpw(plain_password.encode("utf-8"), salt)
+
+        hashed = await asyncio.to_thread(_hash)
         return hashed.decode("utf-8")
 
-    def verify_password(self, plain_password: str, hashed_password: str) -> bool:
+    async def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         """
         Verifies the given plain password against the hashed password using bcrypt.
         """
         try:
-            return bcrypt.checkpw(
-                plain_password.encode("utf-8"), hashed_password.encode("utf-8")
+            return await asyncio.to_thread(
+                lambda: bcrypt.checkpw(
+                    plain_password.encode("utf-8"),
+                    hashed_password.encode("utf-8"),
+                )
             )
         except ValueError:
             return False

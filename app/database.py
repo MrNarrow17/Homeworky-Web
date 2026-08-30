@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from redis import Redis
+from redis.asyncio import Redis
 from sqlmodel import Session, SQLModel, create_engine
 
 from app.config import get_settings
@@ -39,4 +39,8 @@ def get_redis_client() -> Redis:
     return Redis.from_url(
         settings.redis_url.get_secret_value(),
         decode_responses=True,
+        socket_connect_timeout=3,
+        socket_timeout=3,
+        retry_on_timeout=True,
+        health_check_interval=30,
     )

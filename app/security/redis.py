@@ -1,7 +1,8 @@
 import secrets
 
 from fastapi import Request, Response
-from redis import Redis
+from redis.asyncio import Redis
+from redis.exceptions import RedisError
 
 from app.config import Settings, get_settings
 from app.database import get_redis_client
@@ -53,51 +54,62 @@ class RedisSessionManager:
         )
         return response
 
-    def issue_session(self, response: Response, session: AppSession) -> Response:
+    async def issue_session(self, response: Response, session: AppSession) -> Response:
         """
         Issues a new session for the given user and sets the session cookie in the response.
         """
 
-        if not session.is_authenticated:
-            raise ValueError("Cannot issue session for non-authenticated user")
+        try:
+            if not session.is_authenticated:
+                raise ValueError("Cannot issue session for non-authenticated user")
 
-        opaque_token = secrets.token_urlsafe(64)
-        token_hash = self._password_security.hash_token(opaque_token)
+            opaque_token = secrets.token_urlsafe(64)
+            token_hash = await self._password_security.hash_token(opaque_token)
 
-        self._redis_client.setex(
-            name=f"session:{token_hash}",
-            time=session.lifetime,
-            value=session.model_dump_json(),
-        )
+            await self._redis_client.setex(
+                name=f"session:{token_hash}",
+                time=session.lifetime,
+                value=session.model_dump_json(),
+            )
 
-        return self.set_session_cookie(response, opaque_token, session.lifetime)
+            return self.set_session_cookie(response, opaque_token, session.lifetime)
+        except RedisError:
+            raise RuntimeError("Failed to connect to Redis")
 
-    def get_session(self, request: Request) -> AppSession:
+    async def get_session(self, request: Request) -> AppSession:
         """
         Retrieves the session for the given request.
         """
 
-        opaque_token = request.cookies.get(self._session_cookie)
-        if not opaque_token:
-            return AppSession.from_raw_data(None)
+        try:
+            opaque_token = request.cookies.get(self._session_cookie)
+            if not opaque_token:
+                return AppSession.from_raw_data(None)
 
-        token_hash = self._password_security.hash_token(opaque_token)
-        raw_data = self._redis_client.get(f"session:{token_hash}")
-        return AppSession.from_raw_data(raw_data)
+            token_hash = await self._password_security.hash_token(opaque_token)
+            raw_data = await self._redis_client.get(f"session:{token_hash}")
+            return AppSession.from_raw_data(raw_data)
+        except RedisError:
+            raise RuntimeError("Failed to connect to Redis")
 
-    def invalidate_session(self, request: Request, response: Response) -> Response:
+    async def invalidate_session(
+        self, request: Request, response: Response
+    ) -> Response:
         """
         Invalidates the session for the given request and response.
         """
 
-        opaque_token = request.cookies.get(self._session_cookie)
-        if not opaque_token:
-            return response
+        try:
+            opaque_token = request.cookies.get(self._session_cookie)
+            if not opaque_token:
+                return response
 
-        token_hash = self._password_security.hash_token(opaque_token)
-        self._redis_client.delete(f"session:{token_hash}")
+            token_hash = await self._password_security.hash_token(opaque_token)
+            await self._redis_client.delete(f"session:{token_hash}")
 
-        return self.delete_session_cookie(response)
+            return self.delete_session_cookie(response)
+        except RedisError:
+            raise RuntimeError("Failed to connect to Redis")
 
 
 def get_session_manager(

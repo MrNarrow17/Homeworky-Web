@@ -64,7 +64,7 @@ class ClassAdmin(ModelView, model=Class):
         """
         raw_password = data.get("hashed_password")
         if raw_password:
-            secure_hash = security.hash_password(raw_password)
+            secure_hash = await security.hash_password(raw_password)
             data["hashed_password"] = secure_hash
             model.hashed_password = secure_hash
 
@@ -107,7 +107,7 @@ class StaffAdmin(ModelView, model=Staff):
         """
         raw_password = data.get("hashed_password")
         if raw_password:
-            secure_hash = security.hash_password(raw_password)
+            secure_hash = await security.hash_password(raw_password)
             data["hashed_password"] = secure_hash
             model.hashed_password = secure_hash
 

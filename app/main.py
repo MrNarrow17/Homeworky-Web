@@ -2,16 +2,17 @@ import logging
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import FastAPI, Response
+from fastapi import Depends, FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from sqladmin import Admin
+from sqlmodel import Session, select
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.admin import AdminAuth, ClassAdmin, StaffAdmin
 from app.config import get_settings
-from app.database import engine
+from app.database import engine, get_redis_client, get_session
 from app.logger import get_app_logger
 from app.middleware import HSTSMiddleware, LoggingMiddleware
 from app.routers import classes, staff
@@ -57,6 +58,11 @@ admin.add_view(ClassAdmin)
 admin.add_view(StaffAdmin)
 
 
+@app.exception_handler(RuntimeError)
+async def redis_down_handler(request: Request, exc: RuntimeError):
+    return JSONResponse({"detail": str(exc)}, status_code=503)
+
+
 @app.get("/")
 def root():
     """
@@ -74,11 +80,22 @@ def root_head():
 
 
 @app.get("/health")
-def health():
+async def health(db_session: Session = Depends(get_session)):
     """
-    Returns a 200 OK response for the health check.
+    Returns a 200 OK response if the Redis and database are available, otherwise returns a 503 Service Unavailable response.
     """
-    return {"status": "ok"}
+    redis_ok = True
+    try:
+        await get_redis_client().ping()
+    except Exception:
+        redis_ok = False
+    db_ok = True
+    try:
+        db_session.exec(select(1))
+    except Exception:
+        db_ok = False
+    status_code = 200 if redis_ok and db_ok else 503
+    return JSONResponse({"redis": redis_ok, "db": db_ok}, status_code=status_code)
 
 
 if __name__ == "__main__":
