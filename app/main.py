@@ -3,8 +3,10 @@ from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import Depends, FastAPI, Request, Response
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.exceptions import HTTPException
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from sqladmin import Admin
 from sqlmodel import Session, select
 from starlette.middleware.sessions import SessionMiddleware
@@ -48,10 +50,34 @@ app.include_router(staff.router)
 admin.add_view(ClassAdmin)
 admin.add_view(StaffAdmin)
 
+exception_templates = Jinja2Templates(directory="app/templates/exceptions")
 
-@app.exception_handler(RuntimeError)
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return exception_templates.TemplateResponse(
+        request,
+        name="error.html",
+        context={
+            "request": request,
+            "status_code": exc.status_code,
+            "telegram": settings.telegram_link,
+        },
+        status_code=exc.status_code,
+    )
+
+
+@app.exception_handler(Exception)
 async def redis_down_handler(request: Request, exc: RuntimeError):
-    return JSONResponse({"detail": str(exc)}, status_code=503)
+    return exception_templates.TemplateResponse(
+        request,
+        name="error.html",
+        context={
+            "request": request,
+            "status_code": 500,
+            "telegram": settings.telegram_link,
+        },
+    )
 
 
 @app.get("/")

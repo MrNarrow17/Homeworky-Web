@@ -240,8 +240,8 @@
     <body class="py-4 py-md-5">
         <div class="container" style="max-width: 900px">
             <div class="d-flex align-items-center justify-content-between mb-4 gap-2 flex-wrap">
-                <a href="/staff/dashboard/" class="btn-ghost">
-                    <i class="bi bi-arrow-left"></i> До панелі
+                <a href="/staff/classes/{{ class_.id }}/dashboard/" class="btn-ghost">
+                    <i class="bi bi-arrow-left"></i> До панелі класу
                 </a>
                 <span class="id-chip">ID класу: #{{ class_.id }}</span>
             </div>
@@ -306,7 +306,7 @@
                 {% endfor %}
 
                 <!-- Add Homework Card at the bottom -->
-                <a href="/staff/homework/new?class_id={{ class_.id }}" class="add-hw-card mt-2">
+                <a href="/staff/classes/{{ class_.id }}/homework/new/" class="add-hw-card mt-2">
                     <i class="bi bi-plus-circle"></i>
                     <span>Додати домашнє завдання</span>
                 </a>

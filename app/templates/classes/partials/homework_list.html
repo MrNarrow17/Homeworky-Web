@@ -91,7 +91,7 @@
 
     <!-- Add Homework Card (Visible only to staff) -->
     {% if viewer and viewer.is_staff %}
-    <a href="/staff/homework/new?class_id={{ class_item.id }}" class="add-hw-card mt-2">
+    <a href="/staff/classes/{{ class_item.id }}/homework/new/" class="add-hw-card mt-2">
         <i class="bi bi-plus-circle"></i>
         <span>Додати домашнє завдання</span>
     </a>
