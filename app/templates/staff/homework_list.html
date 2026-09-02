@@ -10,6 +10,10 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/linkifyjs@4.3.3/dist/linkify.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/linkify-html@4.3.3/dist/linkify-html.min.js"></script>
+
         <style>
             :root {
                 --paper: #FAF6EE;
@@ -235,6 +239,57 @@
                 border: 6px solid var(--card);
                 box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             }
+
+            .hw-desc-wrapper {
+                position: relative;
+            }
+            .hw-desc {
+                max-height: 16.5em;
+                overflow: hidden;
+                transition: max-height 0.2s ease;
+                white-space: pre-line;
+            }
+            .hw-desc.clamped {
+                display: -webkit-box;
+                -webkit-line-clamp: 10;
+                -webkit-box-orient: vertical;
+            }
+            .hw-desc:not(.clamped) {
+                max-height: none;
+                overflow: visible;
+            }
+
+            .hw-desc-fog {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 40px;
+                background: linear-gradient(to bottom, transparent, var(--card));
+                pointer-events: none;
+                display: none;
+            }
+
+            .hw-toggle-btn {
+                background: none;
+                border: none;
+                padding: 0.25rem 1rem;
+                color: var(--accent);
+                font-weight: 600;
+                font-size: 0.85rem;
+                cursor: pointer;
+                text-decoration: underline;
+                text-underline-offset: 3px;
+                transition: color 0.15s ease;
+            }
+            .hw-toggle-btn:hover {
+                color: var(--accent-dark);
+            }
+            .hw-toggle-btn:focus {
+                outline: none;
+                box-shadow: 0 0 0 2px rgba(222, 91, 58, 0.4);
+                border-radius: 4px;
+            }
         </style>
     </head>
     <body class="py-4 py-md-5">
@@ -278,10 +333,15 @@
                             </div>
                         </div>
 
-                        <h3 class="hw-title">{{ hw.title if hw.title else "Без назви" }}</h3>
-                        
-                        <div class="hw-desc mt-2">
-                            {{ hw.description if hw.description else "Опис відсутній." }}
+                        <h3 class="hw-title" style="overflow-wrap: anywhere;">{{ hw.title if hw.title else "Без назви" }}</h3>
+            
+                        <div class="hw-desc-wrapper position-relative">
+                            <div class="hw-desc linkify-target mt-2" style="white-space: pre-line; overflow-wrap: anywhere;">{{ hw.description if hw.description else "Опис відсутній." }}</div>
+                            <div class="hw-desc-fog"></div>
+                        </div>
+            
+                        <div class="text-center mt-2">
+                            <button class="hw-toggle-btn d-none">Читати повністю</button>
                         </div>
 
                         {% if hw.images and hw.images|length > 0 %}
@@ -324,27 +384,67 @@
             </div>
         </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script>
-            // Event delegation: listens for clicks on the document, 
-            // so it works even when HTMX swaps new homework in.
+            function parseTextLinks(root = document) {
+                root.querySelectorAll('.linkify-target:not([data-linkified])').forEach(desc => {
+                    desc.innerHTML = linkifyHtml(desc.innerHTML, {
+                        target: '_blank',
+                        className: 'link-primary text-decoration-underline'
+                    });
+                    desc.setAttribute('data-linkified', 'true');
+                });
+            }
+
+            function setupTruncation(root = document) {
+                root.querySelectorAll('.hw-desc').forEach(desc => {
+                    if (desc.hasAttribute('data-clamp-initialized')) return;
+
+                    const wrapper = desc.parentElement; // .hw-desc-wrapper
+                    const fog = wrapper.querySelector('.hw-desc-fog');
+                    const toggleBtn = wrapper.parentElement.querySelector('.hw-toggle-btn');
+
+                    desc.classList.add('clamped');
+                    fog.style.display = 'none';
+
+                    if (desc.scrollHeight > desc.clientHeight) {
+                        fog.style.display = 'block';
+                        toggleBtn.classList.remove('d-none');
+                    }
+
+                    desc.setAttribute('data-clamp-initialized', 'true');
+
+                    toggleBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const isClamped = desc.classList.contains('clamped');
+                        if (isClamped) {
+                            desc.classList.remove('clamped');
+                            fog.style.display = 'none';
+                            toggleBtn.textContent = 'Згорнути';
+                        } else {
+                            desc.classList.add('clamped');
+                            fog.style.display = 'block';
+                            toggleBtn.textContent = 'Читати повністю';
+                        }
+                    });
+                });
+            }
+
+            function init() {
+                parseTextLinks(document);
+                setupTruncation(document);
+            }
+
+            document.addEventListener('DOMContentLoaded', init);
             document.addEventListener("click", function (e) {
                 const target = e.target;
-                
-                // If the clicked element (or its parent) has the 'img-thumb' class
                 if (target.classList.contains("img-thumb") || target.closest(".img-thumb")) {
                     e.preventDefault();
-                    
                     const imgEl = target.classList.contains("img-thumb") ? target : target.closest(".img-thumb");
                     const imgSrc = imgEl.getAttribute("src");
                     const imgAlt = imgEl.getAttribute("alt");
-                    
-                    const lightboxImage = document.getElementById("lightboxImage");
-                    lightboxImage.setAttribute("src", imgSrc);
-                    lightboxImage.setAttribute("alt", imgAlt);
-                    
-                    const lightboxModal = new bootstrap.Modal(document.getElementById('imageLightbox'));
-                    lightboxModal.show();
+                    document.getElementById("lightboxImage").setAttribute("src", imgSrc);
+                    document.getElementById("lightboxImage").setAttribute("alt", imgAlt);
+                    new bootstrap.Modal(document.getElementById('imageLightbox')).show();
                 }
             });
         </script>
