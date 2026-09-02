@@ -1,4 +1,59 @@
 <!-- Week / Date Switcher Controls -->
+<script src="https://cdn.jsdelivr.net/npm/linkifyjs@4.3.3/dist/linkify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/linkify-html@4.3.3/dist/linkify-html.min.js"></script>
+
+
+<style>
+    .hw-desc {
+        max-height: 6.6em;
+        overflow: hidden;
+        transition: max-height 0.2s ease;
+    }
+    .hw-desc.clamped {
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        -webkit-box-orient: vertical;
+    }
+    .hw-desc:not(.clamped) {
+        max-height: none;
+        overflow: visible;
+    }
+
+    .hw-desc-wrapper {
+        position: relative;
+    }
+    .hw-desc-fog {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 40px;
+        background: linear-gradient(to bottom, transparent, var(--card));
+        pointer-events: none;
+        display: none;
+    }
+    .hw-toggle-btn {
+        background: none;
+        border: none;
+        padding: 0.25rem 1rem;
+        color: var(--accent);
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        transition: color 0.15s ease;
+    }
+    .hw-toggle-btn:hover {
+        color: var(--accent-dark);
+    }
+    .hw-toggle-btn:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(222, 91, 58, 0.4);
+        border-radius: 4px;
+    }
+</style>
+
 <div class="surface p-3 mb-4">
     {% if selected_day %}
         <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
@@ -72,7 +127,7 @@
 </div>
 
 <!-- Homework Feed -->
-<div class="d-flex flex-column gap-3">
+<div id="homeworkContainer" class="d-flex flex-column gap-3">
     {% for hw in homework_list %}
         <div class="hw-card {% if loop.index0 % 4 == 1 %}c2{% elif loop.index0 % 4 == 2 %}c3{% elif loop.index0 % 4 == 3 %}c4{% endif %}">
             <div class="d-flex justify-content-between align-items-start mb-2 gap-2 flex-wrap">
@@ -101,7 +156,14 @@
 
             <h3 class="hw-title" style="overflow-wrap: anywhere;">{{ hw.title if hw.title else "Без назви" }}</h3>
 
-            <div class="hw-desc mt-2" style="white-space: pre-line; overflow-wrap: anywhere;">{{ hw.description if hw.description else "Опис відсутній." }}</div>
+            <div class="hw-desc-wrapper position-relative">
+                <div class="hw-desc linkify-target mt-2" style="white-space: pre-line; overflow-wrap: anywhere;">{{ hw.description if hw.description else "Опис відсутній." }}</div>
+                <div class="hw-desc-fog"></div>
+            </div>
+
+            <div class="text-center mt-2">
+                <button class="hw-toggle-btn d-none">Читати повністю</button>
+            </div>
 
             {% if hw.images %}
             <div class="hw-divider"></div>
@@ -137,22 +199,67 @@
 </div>
 
 <script>
-    // Returns the visitor's local calendar date as YYYY-MM-DD, independent
-    // of UTC offset (Date().toISOString() alone would give the UTC date,
-    // which can be off by one near midnight for non-UTC visitors).
+    function parseTextLinks(root = document) {
+        root.querySelectorAll('.linkify-target:not([data-linkified])').forEach(desc => {
+            desc.innerHTML = linkifyHtml(desc.innerHTML, {
+                target: '_blank',
+                className: 'link-primary text-decoration-underline'
+            });
+            desc.setAttribute('data-linkified', 'true');
+        });
+    }
+
+    function setupTruncation(root = document) {
+        root.querySelectorAll('.hw-desc').forEach(desc => {
+            if (desc.hasAttribute('data-clamp-initialized')) return;
+
+            const wrapper = desc.parentElement;
+            const fog = wrapper.querySelector('.hw-desc-fog');
+            const toggleBtn = wrapper.parentElement.querySelector('.hw-toggle-btn');
+
+            desc.classList.add('clamped');
+            fog.style.display = 'none';
+
+            if (desc.scrollHeight > desc.clientHeight) {
+                fog.style.display = 'block';
+                toggleBtn.classList.remove('d-none');
+            }
+
+            desc.setAttribute('data-clamp-initialized', 'true');
+
+            toggleBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const isClamped = desc.classList.contains('clamped');
+                if (isClamped) {
+                    desc.classList.remove('clamped');
+                    fog.style.display = 'none';
+                    toggleBtn.textContent = 'Згорнути';
+                } else {
+                    desc.classList.add('clamped');
+                    fog.style.display = 'block';
+                    toggleBtn.textContent = 'Читати повністю';
+                }
+            });
+        });
+    }
+
+    function init() {
+        parseTextLinks(document);
+        setupTruncation(document);
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('htmx:afterSwap', init);
+
     function todayLocalISO() {
         const d = new Date();
         const offsetMs = d.getTimezoneOffset() * 60000;
         return new Date(d.getTime() - offsetMs).toISOString().slice(0, 10);
     }
 
-    // Adds `delta` calendar days to a YYYY-MM-DD string, staying in UTC
-    // arithmetic throughout so the shift is unambiguous regardless of
-    // the visitor's timezone (this is pure date math, not "now").
     function shiftDay(dateStr, delta) {
         const d = new Date(dateStr + "T00:00:00Z");
         d.setUTCDate(d.getUTCDate() + delta);
         return d.toISOString().slice(0, 10);
     }
-
 </script>
