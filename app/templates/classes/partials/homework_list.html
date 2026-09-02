@@ -11,11 +11,6 @@
             <div class="text-center px-2">
                 <div class="position-relative d-inline-block">
                     <div class="week-label">{{ selected_day[:10] }}</div>
-                    <div id="weekSpinner"
-                         class="spinner-border spinner-border-sm spinner-warm htmx-indicator position-absolute top-50 start-100 translate-middle-y ms-1"
-                         role="status">
-                        <span class="visually-hidden">Завантаження...</span>
-                    </div>
                 </div>
                 <div class="week-range">Перегляд за конкретну дату</div>
             </div>
@@ -50,11 +45,6 @@
             <div class="text-center px-2">
                 <div class="position-relative d-inline-block">
                     <div class="week-label">Тиждень {{ current_week }}</div>
-                    <div id="weekSpinner"
-                         class="spinner-border spinner-border-sm spinner-warm htmx-indicator position-absolute top-50 start-100 translate-middle-y ms-1"
-                         role="status">
-                        <span class="visually-hidden">Завантаження...</span>
-                    </div>
                 </div>
                 <div class="week-range">{{ week_start_date }} — {{ week_end_date }}</div>
             </div>
