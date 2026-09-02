@@ -2,43 +2,38 @@
 <div class="surface p-3 mb-4">
     {% if selected_day %}
         <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
-            <div class="d-flex align-items-center gap-2">
-                <span class="day-icon">
-                    <i class="bi bi-calendar-event-fill"></i>
-                </span>
-    
-                <div>
-                    <div class="week-label">
-                        {{ selected_day.strftime("%d.%m.%Y") if selected_day.strftime is defined else selected_day[:10] }}
-                    </div>
-    
-                    <div class="week-range">
-                        Перегляд за конкретну дату
+            <button type="button" class="btn-ghost px-3 py-2 text-nowrap" aria-label="Попередній день"
+                    onclick="window.location.href = '/classes/{{ class_item.id }}/?day=' + shiftDay('{{ selected_day[:10] }}', -1)">
+                <i class="bi bi-chevron-left"></i>
+                <span class="d-none d-sm-inline">Попередній день</span>
+            </button>
+            
+            <div class="text-center px-2">
+                <div class="position-relative d-inline-block">
+                    <div class="week-label">{{ selected_day[:10] }}</div>
+                    <div id="weekSpinner"
+                         class="spinner-border spinner-border-sm spinner-warm htmx-indicator position-absolute top-50 start-100 translate-middle-y ms-1"
+                         role="status">
+                        <span class="visually-hidden">Завантаження...</span>
                     </div>
                 </div>
+                <div class="week-range">Перегляд за конкретну дату</div>
             </div>
-    
-            <div class="d-flex align-items-center gap-2">
-                <button type="button"
-                        id="datePickerButton"
-                        class="btn-ghost px-3 py-2">
-                    <i class="bi bi-calendar3"></i>
-                    <span class="d-none d-sm-inline">Обрати дату</span>
-                </button>
-    
-                <input type="date"
-                       id="datePicker"
-                       class="date-picker-hidden"
-                       value="{{ selected_day.strftime('%Y-%m-%d') if selected_day.strftime is defined else selected_day[:10] }}"
-                       tabindex="-1">
-                
-                <a href="/classes/{{ class_item.id }}/?week={{ current_week }}"
-                   class="btn-ghost px-3 py-2"
-                   title="До перегляду по тижнях">
-                    <i class="bi bi-arrow-counterclockwise"></i>
-                    <span class="d-none d-sm-inline">До тижня</span>
-                </a>
-            </div>
+
+            <button type="button" class="btn-ghost px-3 py-2 text-nowrap" aria-label="Наступний день"
+                    onclick="window.location.href = '/classes/{{ class_item.id }}/?day=' + shiftDay('{{ selected_day[:10] }}', 1)">
+                <span class="d-none d-sm-inline">Наступний день</span>
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        </div>
+
+        <div class="d-flex justify-content-center align-items-center gap-2 mt-3 flex-wrap">
+            <a href="/classes/{{ class_item.id }}/?week={{ current_week }}"
+               class="btn-ghost px-3 py-2"
+               title="До перегляду по тижнях">
+                <i class="bi bi-arrow-counterclockwise"></i>
+                <span class="d-none d-sm-inline">Дивитися по тижням</span>
+            </a>
         </div>
     {% else %}
         <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
@@ -78,17 +73,10 @@
         <div class="d-flex justify-content-center mt-3">
             <button type="button"
                     class="date-picker-trigger"
-                    onclick="document.getElementById('datePicker').showPicker()">
+                    onclick="window.location.href = '/classes/{{ class_item.id }}/?day=' + todayLocalISO()">
                 <i class="bi bi-calendar3"></i>
-                <span>Обрати конкретну дату</span>
+                <span>Дивитися по дням</span>
             </button>
-        
-            <input type="date"
-                   id="datePicker"
-                   class="date-input-hidden"
-                   onchange="if (this.value) {
-                       window.location.href = '/classes/{{ class_item.id }}/?day=' + this.value;
-                   }">
         </div>
     {% endif %}
 </div>
@@ -159,27 +147,22 @@
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const button = document.getElementById("datePickerButton");
-        const picker = document.getElementById("datePicker");
+    // Returns the visitor's local calendar date as YYYY-MM-DD, independent
+    // of UTC offset (Date().toISOString() alone would give the UTC date,
+    // which can be off by one near midnight for non-UTC visitors).
+    function todayLocalISO() {
+        const d = new Date();
+        const offsetMs = d.getTimezoneOffset() * 60000;
+        return new Date(d.getTime() - offsetMs).toISOString().slice(0, 10);
+    }
 
-        if (!button || !picker) {
-            return;
-        }
+    // Adds `delta` calendar days to a YYYY-MM-DD string, staying in UTC
+    // arithmetic throughout so the shift is unambiguous regardless of
+    // the visitor's timezone (this is pure date math, not "now").
+    function shiftDay(dateStr, delta) {
+        const d = new Date(dateStr + "T00:00:00Z");
+        d.setUTCDate(d.getUTCDate() + delta);
+        return d.toISOString().slice(0, 10);
+    }
 
-        button.addEventListener("click", function () {
-            if (picker.showPicker) {
-                picker.showPicker();
-            } else {
-                picker.click();
-            }
-        });
-
-        picker.addEventListener("change", function () {
-            if (this.value) {
-                window.location.href =
-                    "/classes/{{ class_item.id }}/?day=" + this.value;
-            }
-        });
-    });
 </script>

@@ -1,4 +1,4 @@
-from datetime import datetime as datetype
+from datetime import date as date_type
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.requests import Request
@@ -88,7 +88,7 @@ async def get_class(
     request: Request,
     class_id: int,
     week: int | None = None,
-    day: datetype | None = None,
+    day: date_type | None = None,
     db_session: Session = Depends(get_session),
     viewer: AppSession = Depends(viewer_deps.require_class_any),
 ):
@@ -129,7 +129,7 @@ async def get_homework_for_week(
     request: Request,
     class_id: int,
     week: int | None = None,
-    day: datetype | None = None,
+    day: date_type | None = None,
     db_session: Session = Depends(get_session),
     viewer: AppSession = Depends(viewer_deps.require_class_any),
 ):

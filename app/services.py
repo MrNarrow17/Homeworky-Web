@@ -36,6 +36,10 @@ class HomeworkService:
         Returns a list of homework items for the given class and date range.
         """
 
+        print(
+            f"get_by_dates: class_id={class_id}, start_date={start_date}, end_date={end_date}"
+        )
+
         statement = (
             select(Homework)
             .where(Homework.class_id_db == class_id)

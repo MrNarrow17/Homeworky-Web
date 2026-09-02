@@ -19,7 +19,7 @@ class CloudJSONFormatter(JsonFormatter):
     def add_fields(self, log_data, record: LogRecord, message_dict):
         super().add_fields(log_data, record, message_dict)
 
-        log_data["timestamp"] = settings.current_time.isoformat()
+        log_data["timestamp"] = settings.local_time.isoformat()
 
         if "asctime" in log_data:
             del log_data["asctime"]
