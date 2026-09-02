@@ -26,7 +26,7 @@ class Staff(SQLModel, table=True):
     is_mod: bool = Field(default=False)
 
     created_at: datetime = Field(
-        default_factory=lambda: get_settings().current_time,
+        default_factory=lambda: get_settings().utc_time,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
 
@@ -35,6 +35,10 @@ class Staff(SQLModel, table=True):
     classes: list["Class"] = Relationship(
         back_populates="moderators", link_model=StaffClassLink
     )
+
+    @property
+    def local_created_at(self) -> datetime:
+        return self.created_at.astimezone(get_settings().local_timezone)
 
     def __str__(self) -> str:
         return self.username

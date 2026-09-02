@@ -23,7 +23,7 @@ class Class(ClassBase, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     created_at: datetime = Field(
-        default_factory=lambda: get_settings().current_time,
+        default_factory=lambda: get_settings().utc_time,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
     hashed_password: str
@@ -40,6 +40,10 @@ class Class(ClassBase, table=True):
             "cascade": "all, delete-orphan",
         },
     )
+
+    @property
+    def local_created_at(self) -> datetime:
+        return self.created_at.astimezone(get_settings().local_timezone)
 
     def __str__(self) -> str:
         return self.name

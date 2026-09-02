@@ -28,13 +28,17 @@ class Homework(SQLModel, table=True):
     images: list[str] = Field(default_factory=list, sa_type=JSON)
 
     created_at: datetime = Field(
-        default_factory=lambda: get_settings().current_time,
+        default_factory=lambda: get_settings().utc_time,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
     created_by: str
 
     class_rel: "Class" = Relationship(back_populates="homeworks")
     class_id_db: int = Field(foreign_key="class.id", ondelete="CASCADE", index=True)
+
+    @property
+    def local_created_at(self) -> datetime:
+        return self.created_at.astimezone(get_settings().local_timezone)
 
     def __str__(self) -> str:
         return f"Homework #{self.id}"

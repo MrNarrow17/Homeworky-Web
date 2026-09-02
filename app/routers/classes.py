@@ -96,7 +96,7 @@ async def get_class(
     if not db_class:
         raise HTTPException(status_code=404, detail="Class not found")
 
-    now = settings.current_time
+    now = settings.local_time
     current_year, current_week, _ = now.isocalendar()
     selected_week = week if week is not None else current_week
 
@@ -138,7 +138,7 @@ async def get_homework_for_week(
     if not db_class:
         raise HTTPException(status_code=404, detail="Class not found")
 
-    now = settings.current_time
+    now = settings.local_time
     current_year, current_week, _ = now.isocalendar()
     selected_week = week if week is not None else current_week
 

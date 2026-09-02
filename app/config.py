@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from functools import lru_cache
 
 from pydantic import Field, SecretStr, field_validator
@@ -90,12 +90,16 @@ class Settings(BaseSettings):
         return v
 
     @property
-    def timezone(self) -> timezone:
+    def local_timezone(self) -> timezone:
         return timezone(timedelta(hours=self.time_delta))
 
     @property
-    def current_time(self) -> datetime:
-        return datetime.now(self.timezone)
+    def local_time(self) -> datetime:
+        return self.utc_time.astimezone(self.local_timezone)
+
+    @property
+    def utc_time(self) -> datetime:
+        return datetime.now(UTC)
 
 
 @lru_cache

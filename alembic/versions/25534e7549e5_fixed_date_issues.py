@@ -16,18 +16,22 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.execute("""
-        ALTER TABLE homework
-        ALTER COLUMN created_at
-        TYPE TIMESTAMP WITH TIME ZONE
-        USING created_at AT TIME ZONE 'UTC'
-    """)
+    bind = op.get_bind()
+    if bind.dialect.name == "postgresql":
+        op.execute("""
+            ALTER TABLE homework
+            ALTER COLUMN created_at
+            TYPE TIMESTAMP WITH TIME ZONE
+            USING created_at AT TIME ZONE 'UTC'
+        """)
 
 
 def downgrade() -> None:
-    op.execute("""
-        ALTER TABLE homework
-        ALTER COLUMN created_at
-        TYPE TIMESTAMP WITHOUT TIME ZONE
-        USING created_at AT TIME ZONE 'UTC'
-    """)
+    bind = op.get_bind()
+    if bind.dialect.name == "postgresql":
+        op.execute("""
+            ALTER TABLE homework
+            ALTER COLUMN created_at
+            TYPE TIMESTAMP WITHOUT TIME ZONE
+            USING created_at AT TIME ZONE 'UTC'
+        """)

@@ -294,7 +294,7 @@
                         {% endif %}
 
                         <div class="hw-footer">
-                            <span>Додано: {{ hw.created_at.strftime("%d.%m %H:%M") if hw.created_at else "" }}</span>
+                            <span>Додано: {{ hw.local_created_at.strftime("%d.%m %H:%M") if hw.created_at else "" }}</span>
                         </div>
                     </div>
                 {% else %}

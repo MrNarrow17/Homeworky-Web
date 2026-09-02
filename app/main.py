@@ -3,8 +3,8 @@ from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import Depends, FastAPI, Request, Response
-from fastapi.exceptions import HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.exceptions import HTTPException, RequestValidationError
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqladmin import Admin
@@ -77,6 +77,21 @@ async def redis_down_handler(request: Request, exc: RuntimeError):
             "status_code": 500,
             "telegram": settings.telegram_link,
         },
+        status_code=500,
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return exception_templates.TemplateResponse(
+        request,
+        name="error.html",
+        context={
+            "request": request,
+            "status_code": 422,
+            "telegram": settings.telegram_link,
+        },
+        status_code=422,
     )
 
 

@@ -136,7 +136,7 @@
 
             {% if hw.created_at %}
             <div class="hw-footer">
-                <span>Додано: {{ hw.created_at.strftime("%d.%m %H:%M") }}</span>
+                <span>Додано: {{ hw.local_created_at.strftime("%d.%m %H:%M") }}</span>
             </div>
             {% endif %}
         </div>

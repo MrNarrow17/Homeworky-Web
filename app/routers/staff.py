@@ -111,7 +111,7 @@ async def class_dashboard(
     if not db_class:
         raise HTTPException(status_code=404, detail="Class not found")
 
-    now = settings.current_time
+    now = settings.local_time
     current_year, current_week, _ = now.isocalendar()
     start_date, end_date = get_week_range(current_year, current_week)
 
