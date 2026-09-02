@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlmodel import Field, Relationship
+from sqlmodel import Column, DateTime, Field, Relationship
 
 from app.config import get_settings
 from app.models.links import StaffClassLink
@@ -22,7 +22,10 @@ class Class(ClassBase, table=True):
     """
 
     id: int | None = Field(default=None, primary_key=True)
-    created_at: datetime = Field(default_factory=lambda: get_settings().current_time)
+    created_at: datetime = Field(
+        default_factory=lambda: get_settings().current_time,
+        sa_column=Column(DateTime(timezone=True), nullable=False),
+    )
     hashed_password: str
 
     ### Relationships ###

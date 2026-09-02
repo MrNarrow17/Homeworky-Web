@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from datetime import datetime as datetype
+
+from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.requests import Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -86,6 +88,7 @@ async def get_class(
     request: Request,
     class_id: int,
     week: int | None = None,
+    day: datetype | None = None,
     db_session: Session = Depends(get_session),
     viewer: AppSession = Depends(viewer_deps.require_class_any),
 ):
@@ -95,9 +98,12 @@ async def get_class(
 
     now = settings.current_time
     current_year, current_week, _ = now.isocalendar()
-
     selected_week = week if week is not None else current_week
-    start_date, end_date = get_week_range(current_year, selected_week)
+
+    if day is not None:
+        start_date, end_date = (day, day)
+    else:
+        start_date, end_date = get_week_range(current_year, selected_week)
 
     homework_list = HomeworkService.get_by_dates(
         db_session, class_id, start_date, end_date
@@ -110,6 +116,7 @@ async def get_class(
             "class_item": ClassPublic.model_validate(db_class),
             "homework_list": homework_list,
             "current_week": selected_week,
+            "selected_day": day.isoformat() if day else None,
             "week_start_date": start_date.strftime("%d.%m"),
             "week_end_date": end_date.strftime("%d.%m"),
             "viewer": viewer,
@@ -121,18 +128,24 @@ async def get_class(
 async def get_homework_for_week(
     request: Request,
     class_id: int,
-    week: int = Query(...),
+    week: int | None = None,
+    day: datetype | None = None,
     db_session: Session = Depends(get_session),
     viewer: AppSession = Depends(viewer_deps.require_class_any),
 ):
+
     db_class = db_session.get(Class, class_id)
     if not db_class:
         raise HTTPException(status_code=404, detail="Class not found")
 
     now = settings.current_time
-    current_year, _, _ = now.isocalendar()
+    current_year, current_week, _ = now.isocalendar()
+    selected_week = week if week is not None else current_week
 
-    start_date, end_date = get_week_range(current_year, week)
+    if day is not None:
+        start_date, end_date = (day, day)
+    else:
+        start_date, end_date = get_week_range(current_year, selected_week)
 
     homework_list = HomeworkService.get_by_dates(
         db_session, class_id, start_date, end_date
@@ -144,7 +157,8 @@ async def get_homework_for_week(
         context={
             "class_item": ClassPublic.model_validate(db_class),
             "homework_list": homework_list,
-            "current_week": week,
+            "current_week": selected_week,
+            "selected_day": day.isoformat() if day else None,
             "week_start_date": start_date.strftime("%d.%m"),
             "week_end_date": end_date.strftime("%d.%m"),
             "viewer": viewer,

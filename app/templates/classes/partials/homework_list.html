@@ -1,56 +1,117 @@
-<!-- Week Switcher Controls -->
+<!-- Week / Date Switcher Controls -->
 <div class="surface p-3 mb-4">
-    <div class="d-flex align-items-center justify-content-between gap-2">
-        <button class="btn-ghost px-3 py-2"
-                hx-get="/classes/{{ class_item.id }}/homework/?week={{ current_week - 1 }}"
-                hx-target="#homeworkContainer"
-                hx-swap="innerHTML"
-                hx-push-url="/classes/{{ class_item.id }}/?week={{ current_week - 1 }}"
-                hx-indicator="#weekSpinner">
-            <i class="bi bi-chevron-left"></i>
-            <span class="d-none d-sm-inline">Попередній тиждень</span>
-        </button>
-
-        <div class="text-center position-relative px-2">
-            <div class="week-label">Тиждень {{ current_week }}</div>
-            <div class="week-range">{{ week_start_date }} — {{ week_end_date }}</div>
-
-            <div id="weekSpinner" class="spinner-border spinner-border-sm spinner-warm htmx-indicator position-absolute top-50 start-50 translate-middle" role="status">
-                <span class="visually-hidden">Завантаження...</span>
+    {% if selected_day %}
+        <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+            <div class="d-flex align-items-center gap-2">
+                <span class="day-icon">
+                    <i class="bi bi-calendar-event-fill"></i>
+                </span>
+    
+                <div>
+                    <div class="week-label">
+                        {{ selected_day.strftime("%d.%m.%Y") if selected_day.strftime is defined else selected_day[:10] }}
+                    </div>
+    
+                    <div class="week-range">
+                        Перегляд за конкретну дату
+                    </div>
+                </div>
+            </div>
+    
+            <div class="d-flex align-items-center gap-2">
+                <button type="button"
+                        id="datePickerButton"
+                        class="btn-ghost px-3 py-2">
+                    <i class="bi bi-calendar3"></i>
+                    <span class="d-none d-sm-inline">Обрати дату</span>
+                </button>
+    
+                <input type="date"
+                       id="datePicker"
+                       class="date-picker-hidden"
+                       value="{{ selected_day.strftime('%Y-%m-%d') if selected_day.strftime is defined else selected_day[:10] }}"
+                       tabindex="-1">
+                
+                <a href="/classes/{{ class_item.id }}/?week={{ current_week }}"
+                   class="btn-ghost px-3 py-2"
+                   title="До перегляду по тижнях">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                    <span class="d-none d-sm-inline">До тижня</span>
+                </a>
             </div>
         </div>
+    {% else %}
+        <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+            <button type="button" class="btn-ghost px-3 py-2 text-nowrap" aria-label="Попередній тиждень"
+                    hx-get="/classes/{{ class_item.id }}/homework/?week={{ current_week - 1 }}"
+                    hx-target="#homeworkContainer"
+                    hx-swap="innerHTML"
+                    hx-push-url="/classes/{{ class_item.id }}/?week={{ current_week - 1 }}"
+                    hx-indicator="#weekSpinner">
+                <i class="bi bi-chevron-left"></i>
+                <span class="d-none d-sm-inline">Попередній тиждень</span>
+            </button>
 
-        <button class="btn-ghost px-3 py-2"
-                hx-get="/classes/{{ class_item.id }}/homework/?week={{ current_week + 1 }}"
-                hx-target="#homeworkContainer"
-                hx-swap="innerHTML"
-                hx-push-url="/classes/{{ class_item.id }}/?week={{ current_week + 1 }}"
-                hx-indicator="#weekSpinner">
-            <span class="d-none d-sm-inline">Наступний тиждень</span>
-            <i class="bi bi-chevron-right"></i>
-        </button>
-    </div>
+            <div class="text-center px-2">
+                <div class="position-relative d-inline-block">
+                    <div class="week-label">Тиждень {{ current_week }}</div>
+                    <div id="weekSpinner"
+                         class="spinner-border spinner-border-sm spinner-warm htmx-indicator position-absolute top-50 start-100 translate-middle-y ms-1"
+                         role="status">
+                        <span class="visually-hidden">Завантаження...</span>
+                    </div>
+                </div>
+                <div class="week-range">{{ week_start_date }} — {{ week_end_date }}</div>
+            </div>
+
+            <button type="button" class="btn-ghost px-3 py-2 text-nowrap" aria-label="Наступний тиждень"
+                    hx-get="/classes/{{ class_item.id }}/homework/?week={{ current_week + 1 }}"
+                    hx-target="#homeworkContainer"
+                    hx-swap="innerHTML"
+                    hx-push-url="/classes/{{ class_item.id }}/?week={{ current_week + 1 }}"
+                    hx-indicator="#weekSpinner">
+                <span class="d-none d-sm-inline">Наступний тиждень</span>
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        </div>
+
+        <div class="d-flex justify-content-center mt-3">
+            <button type="button"
+                    class="date-picker-trigger"
+                    onclick="document.getElementById('datePicker').showPicker()">
+                <i class="bi bi-calendar3"></i>
+                <span>Обрати конкретну дату</span>
+            </button>
+        
+            <input type="date"
+                   id="datePicker"
+                   class="date-input-hidden"
+                   onchange="if (this.value) {
+                       window.location.href = '/classes/{{ class_item.id }}/?day=' + this.value;
+                   }">
+        </div>
+    {% endif %}
 </div>
 
 <!-- Homework Feed -->
 <div class="d-flex flex-column gap-3">
     {% for hw in homework_list %}
         <div class="hw-card {% if loop.index0 % 4 == 1 %}c2{% elif loop.index0 % 4 == 2 %}c3{% elif loop.index0 % 4 == 3 %}c4{% endif %}">
-            <div class="d-flex justify-content-between align-items-start mb-2 gap-2">
-                <span class="subject-pill">
-                    {{ hw.subject if hw.subject else "Загальне завдання" }}
-                </span>
+            <div class="d-flex justify-content-between align-items-start mb-2 gap-2 flex-wrap">
+                <span class="subject-pill">{{ hw.subject if hw.subject else "Загальне завдання" }}</span>
                 <div class="d-flex align-items-center gap-2">
-                    <span class="meta-date">
-                        <i class="bi bi-calendar3"></i>
-                        Здати на {{ hw.date.strftime("%d.%m.%Y") if hw.date else "-" }}
-                    </span>
+                    {% if hw.date %}
+                        <span class="meta-date text-nowrap">
+                            <i class="bi bi-calendar3"></i>
+                            Здати на {{ hw.date.strftime("%d.%m.%Y") }}
+                        </span>
+                    {% endif %}
                     {% if viewer and viewer.is_staff %}
-                    <div class="d-flex align-items-center ms-2 border-start" style="border-color: var(--line) !important; padding-left: .5rem;">
+                    <div class="d-flex align-items-center ms-2 border-start ps-2" style="border-color: var(--line) !important;">
                         <a href="/staff/homework/{{ hw.id }}/edit/" class="action-btn-icon" title="Редагувати">
                             <i class="bi bi-pencil-fill"></i>
                         </a>
-                        <form method="post" action="/staff/homework/{{ hw.id }}/delete/" onsubmit="return confirm('Видалити це завдання?')" style="margin: 0; padding: 0;">
+                        <form method="post" action="/staff/homework/{{ hw.id }}/delete/" onsubmit="return confirm('Видалити це завдання?')">
                             <button type="submit" class="action-btn-icon danger" title="Видалити">
                                 <i class="bi bi-trash-fill"></i>
                             </button>
@@ -60,36 +121,35 @@
                 </div>
             </div>
 
-            <h3 class="hw-title">{{ hw.title if hw.title else "Без назви" }}</h3>
-            
-            <div class="hw-desc mt-2">
-                {{ hw.description if hw.description else "Опис відсутній." }}
-            </div>
+            <h3 class="hw-title" style="overflow-wrap: anywhere;">{{ hw.title if hw.title else "Без назви" }}</h3>
 
-            {% if hw.images and hw.images|length > 0 %}
+            <div class="hw-desc mt-2" style="white-space: pre-line; overflow-wrap: anywhere;">{{ hw.description if hw.description else "Опис відсутній." }}</div>
+
+            {% if hw.images %}
             <div class="hw-divider"></div>
             <div class="d-flex gap-2 flex-wrap mt-2">
                 {% for img in hw.images %}
-                <img src="{{ img }}" alt="Homework image" class="img-thumb">
+                <img src="{{ img }}" alt="{{ hw.title or 'Зображення завдання' }}" class="img-thumb" loading="lazy" style="object-fit: cover;">
                 {% endfor %}
             </div>
             {% endif %}
 
+            {% if hw.created_at %}
             <div class="hw-footer">
-                <span>Додано: {{ hw.created_at.strftime("%d.%m %H:%M") if hw.created_at else "" }}</span>
+                <span>Додано: {{ hw.created_at.strftime("%d.%m %H:%M") }}</span>
             </div>
+            {% endif %}
         </div>
     {% else %}
         <div class="empty-state">
             <div class="icon-wrap"><i class="bi bi-journal-x"></i></div>
             <h5 class="mb-1" style="font-family:'Fraunces',serif;">Немає завдань</h5>
             <p class="text-secondary small mb-0" style="color:var(--ink-soft) !important;">
-                На цей тиждень викладач ще нічого не додав.
+                {% if selected_day %}На цю дату викладач ще нічого не додав.{% else %}На цей тиждень викладач ще нічого не додав.{% endif %}
             </p>
         </div>
     {% endfor %}
 
-    <!-- Add Homework Card (Visible only to staff) -->
     {% if viewer and viewer.is_staff %}
     <a href="/staff/classes/{{ class_item.id }}/homework/new/" class="add-hw-card mt-2">
         <i class="bi bi-plus-circle"></i>
@@ -97,3 +157,29 @@
     </a>
     {% endif %}
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const button = document.getElementById("datePickerButton");
+        const picker = document.getElementById("datePicker");
+
+        if (!button || !picker) {
+            return;
+        }
+
+        button.addEventListener("click", function () {
+            if (picker.showPicker) {
+                picker.showPicker();
+            } else {
+                picker.click();
+            }
+        });
+
+        picker.addEventListener("change", function () {
+            if (this.value) {
+                window.location.href =
+                    "/classes/{{ class_item.id }}/?day=" + this.value;
+            }
+        });
+    });
+</script>

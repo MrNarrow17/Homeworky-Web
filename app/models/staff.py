@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Column, DateTime, Field, Relationship, SQLModel
 
 from app.config import get_settings
 from app.models.links import StaffClassLink
@@ -25,7 +25,10 @@ class Staff(SQLModel, table=True):
     is_admin: bool = Field(default=False)
     is_mod: bool = Field(default=False)
 
-    created_at: datetime = Field(default_factory=lambda: get_settings().current_time)
+    created_at: datetime = Field(
+        default_factory=lambda: get_settings().current_time,
+        sa_column=Column(DateTime(timezone=True), nullable=False),
+    )
 
     ### Relationships ###
 

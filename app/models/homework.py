@@ -2,7 +2,7 @@ from datetime import date as date_type
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlmodel import JSON, Field, Relationship, SQLModel
+from sqlmodel import JSON, Column, DateTime, Field, Relationship, SQLModel
 
 from app.config import get_settings
 
@@ -27,7 +27,10 @@ class Homework(SQLModel, table=True):
     description: str
     images: list[str] = Field(default_factory=list, sa_type=JSON)
 
-    created_at: datetime = Field(default_factory=lambda: get_settings().current_time)
+    created_at: datetime = Field(
+        default_factory=lambda: get_settings().current_time,
+        sa_column=Column(DateTime(timezone=True), nullable=False),
+    )
     created_by: str
 
     class_rel: "Class" = Relationship(back_populates="homeworks")
