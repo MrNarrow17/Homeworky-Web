@@ -2,18 +2,18 @@ import logging
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import Depends, FastAPI, Request, Response
+from fastapi import Depends, FastAPI, Request, Response, status
 from fastapi.exceptions import HTTPException, RequestValidationError
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqladmin import Admin
-from sqlmodel import Session
+from sqlmodel import Session, select
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.admin import AdminAuth, ClassAdmin, StaffAdmin
 from app.config import get_settings
-from app.database import engine, get_session
+from app.database import engine, get_redis_client, get_session
 from app.logger import get_app_logger
 from app.middleware import HSTSMiddleware, LoggingMiddleware
 from app.routers import classes, staff
@@ -112,8 +112,30 @@ def root_head():
 
 
 @app.get("/health")
-def health_check(session: Session = Depends(get_session)):
-    return {"status": "ok"}
+async def health(db_session: Session = Depends(get_session)):
+    """
+    Returns an empty 200 OK response if services are up,
+    otherwise returns an empty 503 Service Unavailable response.
+    """
+    redis_ok = True
+    try:
+        await get_redis_client().ping()
+    except Exception:
+        redis_ok = False
+
+    db_ok = True
+    try:
+        db_session.exec(select(1))
+    except Exception:
+        db_ok = False
+
+    current_status = (
+        status.HTTP_200_OK
+        if redis_ok and db_ok
+        else status.HTTP_503_SERVICE_UNAVAILABLE
+    )
+
+    return Response(status_code=current_status)
 
 
 if __name__ == "__main__":
