@@ -192,6 +192,7 @@ async def post_homework_form(
             image_paths.append(img)
 
     new_homework = Homework(
+        staff_id_db=staff.id,
         class_id_db=class_id,
         subject=form.subject,
         title=form.title,

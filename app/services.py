@@ -6,6 +6,7 @@ from sqlmodel import Session, col, func, select
 from user_agents import parse
 
 from app.models.homework import Homework
+from app.models.staff import Staff
 
 
 class HomeworkService:
@@ -76,6 +77,31 @@ class HomeworkService:
 
         statement = select(func.count()).where(Homework.class_id_db == class_id)
         return db_session.exec(statement).one()
+
+
+class StaffService:
+    @staticmethod
+    def get_best_staff_by_dates(
+        db_session: Session,
+        class_id: int,
+        start_date: date_type,
+        end_date: date_type,
+    ) -> Staff | None:
+        """
+        Returns the Staff with most homeworks.
+        """
+        stmt = (
+            select(Homework.staff_id_db)
+            .where(
+                Homework.class_id_db == class_id,
+                Homework.date >= start_date,
+                Homework.date <= end_date,
+            )
+            .group_by(col(Homework.staff_id_db))
+            .order_by(func.count(col(Homework.id)).desc())
+            .limit(1)
+        )
+        return db_session.get(Staff, db_session.exec(stmt).first())
 
 
 class SessionService:

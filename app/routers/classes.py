@@ -17,7 +17,7 @@ from app.security import (
     get_session_manager,
     get_viewer_dependencies,
 )
-from app.services import HomeworkService
+from app.services import HomeworkService, StaffService
 from app.tools.time_tools import get_week_range
 
 router = APIRouter(prefix="", tags=["Classes"])
@@ -105,6 +105,10 @@ async def get_class(
     else:
         start_date, end_date = get_week_range(current_year, selected_week)
 
+    staff_of_the_month = StaffService.get_best_staff_by_dates(
+        db_session, class_id, start_date, end_date
+    )
+
     homework_list = HomeworkService.get_by_dates(
         db_session, class_id, start_date, end_date
     )
@@ -114,6 +118,9 @@ async def get_class(
         name="class_details.html",
         context={
             "class_item": ClassPublic.model_validate(db_class),
+            "best_staff_username": staff_of_the_month.username
+            if staff_of_the_month
+            else None,
             "homework_list": homework_list,
             "current_week": selected_week,
             "selected_day": day.isoformat() if day else None,

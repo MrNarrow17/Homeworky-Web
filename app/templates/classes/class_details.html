@@ -64,16 +64,6 @@
             }
             .page-subtitle { color: var(--ink-soft); font-size: .95rem; }
 
-            .id-chip {
-                font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-                font-size: .75rem;
-                background: var(--card);
-                border: 1px solid var(--line);
-                color: var(--ink-soft);
-                padding: .4rem .75rem;
-                border-radius: 999px;
-            }
-
             .btn-ghost {
                 display: inline-flex; align-items: center; gap: .5rem;
                 background: var(--card);
@@ -331,6 +321,39 @@
                 opacity: 0;
                 pointer-events: none;
             }
+
+            .best-mod-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: .5rem;
+                background: var(--accent-soft);
+                border: 1px solid rgba(222, 91, 58, 0.35);
+                color: var(--accent-dark);
+                font-weight: 700;
+                font-size: .82rem;
+                padding: .5rem 1.1rem;
+                border-radius: 999px;
+                box-shadow: var(--shadow-sm);
+                transition: all .18s ease;
+                white-space: nowrap;
+            }
+            .best-mod-badge:hover {
+                border-color: var(--accent);
+                transform: translateY(-1px);
+                box-shadow: var(--shadow-md);
+            }
+            .best-mod-badge i {
+                color: var(--accent);
+                font-size: 1rem;
+            }
+            .best-mod-badge .mod-name {
+                background: var(--accent);
+                color: #fff;
+                font-weight: 700;
+                padding: .15rem .55rem;
+                border-radius: 999px;
+                margin-left: .1rem;
+            }
         </style>
     </head>
     <body class="py-4 py-md-5">
@@ -346,7 +369,14 @@
                         <i class="bi bi-box-arrow-left"></i> Вийти з класу
                     </a>
                 {% endif %}
-                <span class="id-chip">ID класу: #{{ class_item.id }}</span>
+            
+                {% if best_staff_username %}
+                    <div class="best-mod-badge">
+                        <i class="bi bi-award-fill"></i>
+                        <span>Найкращий модератор:</span>
+                        <span class="mod-name">{{ best_staff_username }}</span>
+                    </div>
+                {% endif %}
             </div>
 
             <header class="text-center mb-4">

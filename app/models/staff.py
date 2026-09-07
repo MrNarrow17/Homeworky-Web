@@ -8,6 +8,7 @@ from app.models.links import StaffClassLink
 
 if TYPE_CHECKING:
     from app.models.class_ import Class
+    from app.models.homework import Homework
 
 
 class Staff(SQLModel, table=True):
@@ -35,6 +36,8 @@ class Staff(SQLModel, table=True):
     classes: list["Class"] = Relationship(
         back_populates="moderators", link_model=StaffClassLink
     )
+
+    homeworks: list["Homework"] = Relationship(back_populates="staff_rel")
 
     @property
     def local_created_at(self) -> datetime:

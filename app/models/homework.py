@@ -8,6 +8,7 @@ from app.config import get_settings
 
 if TYPE_CHECKING:
     from app.models.class_ import Class
+    from app.models.staff import Staff
 
 
 class Homework(SQLModel, table=True):
@@ -31,10 +32,18 @@ class Homework(SQLModel, table=True):
         default_factory=lambda: get_settings().utc_time,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
-    created_by: str
+
+    ### Relationships ###
+
+    staff_rel: "Staff" = Relationship(back_populates="homeworks")
+    staff_id_db: int = Field(foreign_key="staff.id", index=True)
 
     class_rel: "Class" = Relationship(back_populates="homeworks")
     class_id_db: int = Field(foreign_key="class.id", ondelete="CASCADE", index=True)
+
+    @property
+    def created_by(self) -> str:
+        return self.staff_rel.username
 
     @property
     def local_created_at(self) -> datetime:
