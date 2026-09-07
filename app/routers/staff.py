@@ -199,7 +199,6 @@ async def post_homework_form(
         description=form.description,
         date=form.date,
         images=image_paths,
-        created_by=staff.username,
     )
     db_session.add(new_homework)
     db_session.commit()
