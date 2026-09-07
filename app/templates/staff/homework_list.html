@@ -353,8 +353,9 @@
                         </div>
                         {% endif %}
 
-                        <div class="hw-footer">
-                            <span>Додано: {{ hw.local_created_at.strftime("%d.%m %H:%M") if hw.created_at else "" }}</span>
+                        <div class="d-flex hw-footer justify-content-between">
+                            <span>Додано: {{ hw.local_created_at.strftime("%d.%m %H:%M") }}</span>
+                            <span>Додав: <label class="text-black fw-bold">{{ hw.created_by }}</label></span>
                         </div>
                     </div>
                 {% else %}
