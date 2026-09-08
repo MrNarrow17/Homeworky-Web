@@ -81,22 +81,13 @@ class HomeworkService:
 
 class StaffService:
     @staticmethod
-    def get_best_staff_by_dates(
-        db_session: Session,
-        class_id: int,
-        start_date: date_type,
-        end_date: date_type,
-    ) -> Staff | None:
+    def get_best_staff_by_dates(db_session: Session, class_id: int) -> Staff | None:
         """
         Returns the Staff with most homeworks.
         """
         stmt = (
             select(Homework.staff_id_db)
-            .where(
-                Homework.class_id_db == class_id,
-                Homework.date >= start_date,
-                Homework.date <= end_date,
-            )
+            .where(Homework.class_id_db == class_id)
             .group_by(col(Homework.staff_id_db))
             .order_by(func.count(col(Homework.id)).desc())
             .limit(1)

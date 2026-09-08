@@ -102,9 +102,7 @@ def get_class(
     )
     start_date, end_date = get_week_range(selected_year, selected_week, selected_day)
 
-    staff_of_the_month = StaffService.get_best_staff_by_dates(
-        db_session, class_id, start_date, end_date
-    )
+    staff_of_the_month = StaffService.get_best_staff_by_dates(db_session, class_id)
 
     homework_list = HomeworkService.get_by_dates(
         db_session, class_id, start_date, end_date
