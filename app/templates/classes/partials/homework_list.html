@@ -26,6 +26,33 @@
     }
     @keyframes hw-spin { to { transform: rotate(360deg); } }
 
+    /* Overdue section */
+    .overdue-section { margin-top: 1.25rem; }
+    .overdue-header {
+        display: flex; align-items: center; gap: .5rem;
+        font-weight: 700; font-size: .85rem;
+        text-transform: uppercase; letter-spacing: .1em;
+        color: var(--accent-dark);
+        margin-bottom: .85rem;
+        padding: 0 .25rem;
+    }
+    .overdue-header i { font-size: 1rem; }
+    .overdue-count {
+        display: inline-flex; align-items: center; justify-content: center;
+        min-width: 1.5rem; height: 1.5rem; padding: 0 .5rem;
+        background: var(--accent); color: #fff;
+        border-radius: 999px;
+        font-size: .75rem; letter-spacing: 0;
+    }
+    .hw-card.hw-overdue { border-left-color: var(--ink-faint); }
+    .hw-card.hw-overdue .subject-pill { background: rgba(34,28,21,.06); color: var(--ink-soft); }
+    .hw-card.hw-overdue .hw-title { color: var(--ink-soft); }
+    .hw-overdue-badge {
+        color: var(--accent-dark); font-weight: 600;
+        display: flex; align-items: center; gap: .35rem;
+        font-size: .82rem;
+    }
+
     .hw-desc {
         max-height: 16.5em;
         overflow: hidden;
@@ -68,6 +95,89 @@
         border-radius: 4px;
     }
 </style>
+
+<!-- Split homework into active vs overdue.
+     Overdue = due date at least 1 day before current_date.
+     (change >= 1 to >= 2 if you want a 1-day grace period)
+     In day view we keep everything in one feed. -->
+{% set hw_split = namespace(active=[], overdue=[]) %}
+{% if not selected_day %}
+    {% for hw in homework_list %}
+        {% if hw.date and (current_date - hw.date).days >= 1 %}
+            {% set _ = hw_split.overdue.append(hw) %}
+        {% else %}
+            {% set _ = hw_split.active.append(hw) %}
+        {% endif %}
+    {% endfor %}
+{% else %}
+    {% set _ = hw_split.active.extend(homework_list) %}
+{% endif %}
+
+<!-- Single card renderer, reused by both sections -->
+{% macro hw_card(hw, color_index, is_overdue = false) %}
+<div class="hw-card {% if is_overdue %}hw-overdue{% elif color_index % 4 == 1 %}c2{% elif color_index % 4 == 2 %}c3{% elif color_index % 4 == 3 %}c4{% endif %}">
+    <div class="d-flex justify-content-between align-items-start mb-2 gap-2 flex-wrap">
+        <span class="subject-pill">{{ hw.subject if hw.subject else "Загальне завдання" }}</span>
+        <div class="d-flex align-items-center gap-2">
+            {% if hw.date %}
+                {% if is_overdue %}
+                    {% set d = (current_date - hw.date).days %}
+                    {% set d10 = d % 10 %}
+                    {% set d100 = d % 100 %}
+                    <span class="meta-date text-nowrap hw-overdue-badge">
+                        <i class="bi bi-exclamation-circle"></i>
+                        Просрочено на {% if d10 == 1 and d100 != 11 %}{{ d }} день{% elif d10 in [2, 3, 4] and d100 not in [12, 13, 14] %}{{ d }} дні{% else %}{{ d }} днів{% endif %}
+                    </span>
+                {% else %}
+                    <span class="meta-date text-nowrap">
+                        <i class="bi bi-calendar3"></i>
+                        Здати на {{ hw.date.strftime("%d.%m.%Y") }}
+                    </span>
+                {% endif %}
+            {% endif %}
+            {% if viewer and viewer.is_staff %}
+            <div class="d-flex align-items-center ms-2 border-start ps-2" style="border-color: var(--line) !important;">
+                <a href="/staff/homework/{{ hw.id }}/edit/" class="action-btn-icon" title="Редагувати">
+                    <i class="bi bi-pencil-fill"></i>
+                </a>
+                <form method="post" action="/staff/homework/{{ hw.id }}/delete/" onsubmit="return confirm('Видалити це завдання?')">
+                    <button type="submit" class="action-btn-icon danger" title="Видалити">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <h3 class="hw-title" style="overflow-wrap: anywhere;">{{ hw.title if hw.title else "Без назви" }}</h3>
+
+    <div class="hw-desc-wrapper position-relative">
+        <div class="hw-desc linkify-target mt-2" style="white-space: pre-line; overflow-wrap: anywhere;">{{ hw.description if hw.description else "Опис відсутній." }}</div>
+        <div class="hw-desc-fog"></div>
+    </div>
+
+    <div class="text-center mt-2">
+        <button class="hw-toggle-btn d-none">Читати повністю</button>
+    </div>
+
+    {% if hw.images %}
+    <div class="hw-divider"></div>
+    <div class="d-flex gap-2 flex-wrap mt-2">
+        {% for img in hw.images %}
+        <img src="{{ img }}" alt="{{ hw.title or 'Зображення завдання' }}" class="img-thumb" loading="lazy" style="object-fit: cover;">
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if hw.created_at %}
+    <div class="d-flex hw-footer justify-content-between">
+        <span>Додано: {{ hw.local_created_at.strftime("%d.%m %H:%M") }}</span>
+        <span>Додав: <label class="text-black fw-bold">{{ hw.created_by }}</label></span>
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}
 
 <!-- Week / Date Switcher Controls -->
 <div class="surface p-3 mb-4">
@@ -159,60 +269,11 @@
 
 <!-- Homework Feed (no id here — #homeworkContainer lives on the parent page) -->
 <div class="d-flex flex-column gap-3">
-    {% for hw in homework_list %}
-        <div class="hw-card {% if loop.index0 % 4 == 1 %}c2{% elif loop.index0 % 4 == 2 %}c3{% elif loop.index0 % 4 == 3 %}c4{% endif %}">
-            <div class="d-flex justify-content-between align-items-start mb-2 gap-2 flex-wrap">
-                <span class="subject-pill">{{ hw.subject if hw.subject else "Загальне завдання" }}</span>
-                <div class="d-flex align-items-center gap-2">
-                    {% if hw.date %}
-                        <span class="meta-date text-nowrap">
-                            <i class="bi bi-calendar3"></i>
-                            Здати на {{ hw.date.strftime("%d.%m.%Y") }}
-                        </span>
-                    {% endif %}
-                    {% if viewer and viewer.is_staff %}
-                    <div class="d-flex align-items-center ms-2 border-start ps-2" style="border-color: var(--line) !important;">
-                        <a href="/staff/homework/{{ hw.id }}/edit/" class="action-btn-icon" title="Редагувати">
-                            <i class="bi bi-pencil-fill"></i>
-                        </a>
-                        <form method="post" action="/staff/homework/{{ hw.id }}/delete/" onsubmit="return confirm('Видалити це завдання?')">
-                            <button type="submit" class="action-btn-icon danger" title="Видалити">
-                                <i class="bi bi-trash-fill"></i>
-                            </button>
-                        </form>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
+    {% for hw in hw_split.active %}
+        {{ hw_card(hw, loop.index0) }}
+    {% endfor %}
 
-            <h3 class="hw-title" style="overflow-wrap: anywhere;">{{ hw.title if hw.title else "Без назви" }}</h3>
-
-            <div class="hw-desc-wrapper position-relative">
-                <div class="hw-desc linkify-target mt-2" style="white-space: pre-line; overflow-wrap: anywhere;">{{ hw.description if hw.description else "Опис відсутній." }}</div>
-                <div class="hw-desc-fog"></div>
-            </div>
-
-            <div class="text-center mt-2">
-                <button class="hw-toggle-btn d-none">Читати повністю</button>
-            </div>
-
-            {% if hw.images %}
-            <div class="hw-divider"></div>
-            <div class="d-flex gap-2 flex-wrap mt-2">
-                {% for img in hw.images %}
-                <img src="{{ img }}" alt="{{ hw.title or 'Зображення завдання' }}" class="img-thumb" loading="lazy" style="object-fit: cover;">
-                {% endfor %}
-            </div>
-            {% endif %}
-
-            {% if hw.created_at %}
-            <div class="d-flex hw-footer justify-content-between">
-                <span>Додано: {{ hw.local_created_at.strftime("%d.%m %H:%M") }}</span>
-                <span>Додав: <label class="text-black fw-bold">{{ hw.created_by }}</label></span>
-            </div>
-            {% endif %}
-        </div>
-    {% else %}
+    {% if not hw_split.active and not hw_split.overdue %}
         <div class="empty-state">
             <div class="icon-wrap"><i class="bi bi-journal-x"></i></div>
             <h5 class="mb-1" style="font-family:'Fraunces',serif;">Немає завдань</h5>
@@ -220,7 +281,20 @@
                 {% if selected_day %}На цю дату викладач ще нічого не додав.{% else %}На цей тиждень викладач ще нічого не додав.{% endif %}
             </p>
         </div>
-    {% endfor %}
+    {% endif %}
+
+    {% if not selected_day and hw_split.overdue %}
+    <div class="overdue-section">
+        <div class="overdue-header">
+            <i class="bi bi-exclamation-triangle-fill">Просрочені</i>
+        </div>
+        <div class="d-flex flex-column gap-3">
+            {% for hw in hw_split.overdue %}
+                {{ hw_card(hw, loop.index0, true) }}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 
     {% if viewer and viewer.is_staff %}
     <a href="/staff/classes/{{ class_item.id }}/homework/new/" class="add-hw-card mt-2">
