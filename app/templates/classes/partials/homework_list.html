@@ -2,9 +2,7 @@
 <script src="https://cdn.jsdelivr.net/npm/linkify-html@4.3.3/dist/linkify-html.min.js"></script>
 
 <style>
-    /* Loading state: htmx adds .htmx-request to #homeworkContainer
-       (set via hx-indicator="#homeworkContainer" on the nav buttons).
-       The feed dims and a centered spinner appears. */
+    /* Loading state: htmx adds .htmx-request to #homeworkContainer */
     #homeworkContainer {
         position: relative;
         transition: opacity 150ms ease;
@@ -81,7 +79,6 @@
                     hx-vals='js:{day: shiftDay("{{ selected_day }}", -1)}'
                     hx-target="#homeworkContainer"
                     hx-swap="innerHTML"
-                    hx-push-url="true"
                     hx-indicator="#homeworkContainer">
                 <i class="bi bi-chevron-left"></i>
                 <span class="d-none d-sm-inline">Попередній день</span>
@@ -99,7 +96,6 @@
                     hx-vals='js:{day: shiftDay("{{ selected_day }}", 1)}'
                     hx-target="#homeworkContainer"
                     hx-swap="innerHTML"
-                    hx-push-url="true"
                     hx-indicator="#homeworkContainer">
                 <span class="d-none d-sm-inline">Наступний день</span>
                 <i class="bi bi-chevron-right"></i>
@@ -111,7 +107,6 @@
                     hx-get="/classes/{{ class_item.id }}/homework/?year={{ selected_year }}&week={{ selected_week }}"
                     hx-target="#homeworkContainer"
                     hx-swap="innerHTML"
-                    hx-push-url="true"
                     hx-indicator="#homeworkContainer">
                 <i class="bi bi-arrow-counterclockwise"></i>
                 <span>Дивитися по тижням</span>
@@ -125,7 +120,6 @@
                     hx-vals='js:{year: shiftWeek({{ selected_year }}, {{ selected_week }}, -1).year, week: shiftWeek({{ selected_year }}, {{ selected_week }}, -1).week}'
                     hx-target="#homeworkContainer"
                     hx-swap="innerHTML"
-                    hx-push-url="true"
                     hx-indicator="#homeworkContainer">
                 <i class="bi bi-chevron-left"></i>
                 <span class="d-none d-sm-inline">Попередній тиждень</span>
@@ -143,7 +137,6 @@
                     hx-vals='js:{year: shiftWeek({{ selected_year }}, {{ selected_week }}, 1).year, week: shiftWeek({{ selected_year }}, {{ selected_week }}, 1).week}'
                     hx-target="#homeworkContainer"
                     hx-swap="innerHTML"
-                    hx-push-url="true"
                     hx-indicator="#homeworkContainer">
                 <span class="d-none d-sm-inline">Наступний тиждень</span>
                 <i class="bi bi-chevron-right"></i>
@@ -156,7 +149,6 @@
                     hx-vals='js:{day: todayLocalISO()}'
                     hx-target="#homeworkContainer"
                     hx-swap="innerHTML"
-                    hx-push-url="true"
                     hx-indicator="#homeworkContainer">
                 <i class="bi bi-calendar3"></i>
                 <span>Дивитися по дням</span>
@@ -239,19 +231,16 @@
 </div>
 
 <script>
-    /* ---------- Date / ISO-week helpers (called from hx-vals at click time) ---------- */
+    /* ---------- Date / ISO-week helpers ---------- */
 
-    // Monday (UTC) of ISO week N of a year. Jan 4 is always in ISO week 1.
     function mondayOfIsoWeek(year, week) {
         const jan4 = new Date(Date.UTC(year, 0, 4));
-        const dow = jan4.getUTCDay() || 7; // Mon=1 … Sun=7
+        const dow = jan4.getUTCDay() || 7;
         const monday = new Date(jan4);
         monday.setUTCDate(jan4.getUTCDate() - dow + 1 + (week - 1) * 7);
         return monday;
     }
 
-    // ISO year + week for the week containing `monday`.
-    // The week's Thursday decides the ISO year → year boundaries are safe.
     function isoWeekOfMonday(monday) {
         const thursday = new Date(monday);
         thursday.setUTCDate(monday.getUTCDate() + 3);
@@ -265,7 +254,6 @@
         };
     }
 
-    // Returns {year, week}
     function shiftWeek(year, week, delta) {
         const monday = mondayOfIsoWeek(year, week);
         monday.setUTCDate(monday.getUTCDate() + delta * 7);
@@ -335,14 +323,12 @@
         setupTruncation(document);
     }
 
-    // Runs on first load AND every time htmx swaps this partial in
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
         init();
     }
 
-    // Bind the htmx hook only once, no matter how many times the partial is swapped
     if (!window.__hwListInitBound) {
         window.__hwListInitBound = true;
         document.addEventListener('htmx:afterSwap', init);
