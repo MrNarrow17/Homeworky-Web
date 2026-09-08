@@ -1,9 +1,33 @@
-<!-- Week / Date Switcher Controls -->
 <script src="https://cdn.jsdelivr.net/npm/linkifyjs@4.3.3/dist/linkify.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/linkify-html@4.3.3/dist/linkify-html.min.js"></script>
 
-
 <style>
+    /* Loading state: htmx adds .htmx-request to #homeworkContainer
+       (set via hx-indicator="#homeworkContainer" on the nav buttons).
+       The feed dims and a centered spinner appears. */
+    #homeworkContainer {
+        position: relative;
+        transition: opacity 150ms ease;
+    }
+    #homeworkContainer.htmx-request {
+        opacity: .45;
+        pointer-events: none;
+    }
+    #homeworkContainer.htmx-request::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 2.25rem;
+        height: 2.25rem;
+        margin: -1.125rem 0 0 -1.125rem;
+        border-radius: 50%;
+        border: 3px solid var(--line-strong);
+        border-top-color: var(--accent);
+        animation: hw-spin .7s linear infinite;
+    }
+    @keyframes hw-spin { to { transform: rotate(360deg); } }
+
     .hw-desc {
         max-height: 16.5em;
         overflow: hidden;
@@ -18,15 +42,10 @@
         max-height: none;
         overflow: visible;
     }
-
-    .hw-desc-wrapper {
-        position: relative;
-    }
+    .hw-desc-wrapper { position: relative; }
     .hw-desc-fog {
         position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
+        bottom: 0; left: 0; right: 0;
         height: 40px;
         background: linear-gradient(to bottom, transparent, var(--card));
         pointer-events: none;
@@ -44,9 +63,7 @@
         text-underline-offset: 3px;
         transition: color 0.15s ease;
     }
-    .hw-toggle-btn:hover {
-        color: var(--accent-dark);
-    }
+    .hw-toggle-btn:hover { color: var(--accent-dark); }
     .hw-toggle-btn:focus {
         outline: none;
         box-shadow: 0 0 0 2px rgba(222, 91, 58, 0.4);
@@ -54,71 +71,93 @@
     }
 </style>
 
+<!-- Week / Date Switcher Controls -->
 <div class="surface p-3 mb-4">
     {% if selected_day %}
+        <!-- DAY VIEW -->
         <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
             <button type="button" class="btn-ghost px-3 py-2 text-nowrap" aria-label="Попередній день"
-                    onclick="window.location.href = '/classes/{{ class_item.id }}/?day=' + shiftDay('{{ selected_day[:10] }}', -1)">
+                    hx-get="/classes/{{ class_item.id }}/homework/"
+                    hx-vals='js:{day: shiftDay("{{ selected_day }}", -1)}'
+                    hx-target="#homeworkContainer"
+                    hx-swap="innerHTML"
+                    hx-push-url="true"
+                    hx-indicator="#homeworkContainer">
                 <i class="bi bi-chevron-left"></i>
                 <span class="d-none d-sm-inline">Попередній день</span>
             </button>
 
             <div class="text-center px-2">
                 <div class="position-relative d-inline-block">
-                    <div class="week-label">{{ selected_day[:10] }}</div>
+                    <div class="week-label">{{ selected_day.strftime("%d.%m.%Y") }}</div>
                 </div>
                 <div class="week-range">Перегляд за конкретну дату</div>
             </div>
 
             <button type="button" class="btn-ghost px-3 py-2 text-nowrap" aria-label="Наступний день"
-                    onclick="window.location.href = '/classes/{{ class_item.id }}/?day=' + shiftDay('{{ selected_day[:10] }}', 1)">
+                    hx-get="/classes/{{ class_item.id }}/homework/"
+                    hx-vals='js:{day: shiftDay("{{ selected_day }}", 1)}'
+                    hx-target="#homeworkContainer"
+                    hx-swap="innerHTML"
+                    hx-push-url="true"
+                    hx-indicator="#homeworkContainer">
                 <span class="d-none d-sm-inline">Наступний день</span>
                 <i class="bi bi-chevron-right"></i>
             </button>
         </div>
 
         <div class="d-flex justify-content-center mt-3">
-            <button type="button"
-                    class="date-picker-trigger"
-                    onclick="window.location.href = '/classes/{{ class_item.id }}/?week={{ current_week }}'">
+            <button type="button" class="date-picker-trigger"
+                    hx-get="/classes/{{ class_item.id }}/homework/?year={{ selected_year }}&week={{ selected_week }}"
+                    hx-target="#homeworkContainer"
+                    hx-swap="innerHTML"
+                    hx-push-url="true"
+                    hx-indicator="#homeworkContainer">
                 <i class="bi bi-arrow-counterclockwise"></i>
                 <span>Дивитися по тижням</span>
             </button>
         </div>
     {% else %}
+        <!-- WEEK VIEW -->
         <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
             <button type="button" class="btn-ghost px-3 py-2 text-nowrap" aria-label="Попередній тиждень"
-                    hx-get="/classes/{{ class_item.id }}/homework/?week={{ current_week - 1 }}"
+                    hx-get="/classes/{{ class_item.id }}/homework/"
+                    hx-vals='js:{year: shiftWeek({{ selected_year }}, {{ selected_week }}, -1).year, week: shiftWeek({{ selected_year }}, {{ selected_week }}, -1).week}'
                     hx-target="#homeworkContainer"
                     hx-swap="innerHTML"
-                    hx-push-url="/classes/{{ class_item.id }}/?week={{ current_week - 1 }}"
-                    hx-indicator="#weekSpinner">
+                    hx-push-url="true"
+                    hx-indicator="#homeworkContainer">
                 <i class="bi bi-chevron-left"></i>
                 <span class="d-none d-sm-inline">Попередній тиждень</span>
             </button>
 
             <div class="text-center px-2">
                 <div class="position-relative d-inline-block">
-                    <div class="week-label">Тиждень {{ current_week }}</div>
+                    <div class="week-label">Тиждень {{ selected_week }}</div>
                 </div>
-                <div class="week-range">{{ week_start_date }} — {{ week_end_date }}</div>
+                <div class="week-range">{{ week_start_date }} — {{ week_end_date }} · {{ selected_year }}</div>
             </div>
 
             <button type="button" class="btn-ghost px-3 py-2 text-nowrap" aria-label="Наступний тиждень"
-                    hx-get="/classes/{{ class_item.id }}/homework/?week={{ current_week + 1 }}"
+                    hx-get="/classes/{{ class_item.id }}/homework/"
+                    hx-vals='js:{year: shiftWeek({{ selected_year }}, {{ selected_week }}, 1).year, week: shiftWeek({{ selected_year }}, {{ selected_week }}, 1).week}'
                     hx-target="#homeworkContainer"
                     hx-swap="innerHTML"
-                    hx-push-url="/classes/{{ class_item.id }}/?week={{ current_week + 1 }}"
-                    hx-indicator="#weekSpinner">
+                    hx-push-url="true"
+                    hx-indicator="#homeworkContainer">
                 <span class="d-none d-sm-inline">Наступний тиждень</span>
                 <i class="bi bi-chevron-right"></i>
             </button>
         </div>
 
         <div class="d-flex justify-content-center mt-3">
-            <button type="button"
-                    class="date-picker-trigger"
-                    onclick="window.location.href = '/classes/{{ class_item.id }}/?day=' + todayLocalISO()">
+            <button type="button" class="date-picker-trigger"
+                    hx-get="/classes/{{ class_item.id }}/homework/"
+                    hx-vals='js:{day: todayLocalISO()}'
+                    hx-target="#homeworkContainer"
+                    hx-swap="innerHTML"
+                    hx-push-url="true"
+                    hx-indicator="#homeworkContainer">
                 <i class="bi bi-calendar3"></i>
                 <span>Дивитися по дням</span>
             </button>
@@ -126,8 +165,8 @@
     {% endif %}
 </div>
 
-<!-- Homework Feed -->
-<div id="homeworkContainer" class="d-flex flex-column gap-3">
+<!-- Homework Feed (no id here — #homeworkContainer lives on the parent page) -->
+<div class="d-flex flex-column gap-3">
     {% for hw in homework_list %}
         <div class="hw-card {% if loop.index0 % 4 == 1 %}c2{% elif loop.index0 % 4 == 2 %}c3{% elif loop.index0 % 4 == 3 %}c4{% endif %}">
             <div class="d-flex justify-content-between align-items-start mb-2 gap-2 flex-wrap">
@@ -200,6 +239,52 @@
 </div>
 
 <script>
+    /* ---------- Date / ISO-week helpers (called from hx-vals at click time) ---------- */
+
+    // Monday (UTC) of ISO week N of a year. Jan 4 is always in ISO week 1.
+    function mondayOfIsoWeek(year, week) {
+        const jan4 = new Date(Date.UTC(year, 0, 4));
+        const dow = jan4.getUTCDay() || 7; // Mon=1 … Sun=7
+        const monday = new Date(jan4);
+        monday.setUTCDate(jan4.getUTCDate() - dow + 1 + (week - 1) * 7);
+        return monday;
+    }
+
+    // ISO year + week for the week containing `monday`.
+    // The week's Thursday decides the ISO year → year boundaries are safe.
+    function isoWeekOfMonday(monday) {
+        const thursday = new Date(monday);
+        thursday.setUTCDate(monday.getUTCDate() + 3);
+        const jan4 = new Date(Date.UTC(thursday.getUTCFullYear(), 0, 4));
+        const dow = jan4.getUTCDay() || 7;
+        const week1Monday = new Date(jan4);
+        week1Monday.setUTCDate(jan4.getUTCDate() - dow + 1);
+        return {
+            year: thursday.getUTCFullYear(),
+            week: Math.round((monday - week1Monday) / 604800000) + 1
+        };
+    }
+
+    // Returns {year, week}
+    function shiftWeek(year, week, delta) {
+        const monday = mondayOfIsoWeek(year, week);
+        monday.setUTCDate(monday.getUTCDate() + delta * 7);
+        return isoWeekOfMonday(monday);
+    }
+
+    function todayLocalISO() {
+        const d = new Date();
+        const offsetMs = d.getTimezoneOffset() * 60000;
+        return new Date(d.getTime() - offsetMs).toISOString().slice(0, 10);
+    }
+
+    function shiftDay(dateStr, delta) {
+        const d = new Date(String(dateStr).slice(0, 10) + "T00:00:00Z");
+        d.setUTCDate(d.getUTCDate() + delta);
+        return d.toISOString().slice(0, 10);
+    }
+
+    /* ---------- Linkify plain-text links ---------- */
     function parseTextLinks(root = document) {
         root.querySelectorAll('.linkify-target:not([data-linkified])').forEach(desc => {
             desc.innerHTML = linkifyHtml(desc.innerHTML, {
@@ -210,6 +295,7 @@
         });
     }
 
+    /* ---------- Read more / collapse ---------- */
     function setupTruncation(root = document) {
         root.querySelectorAll('.hw-desc').forEach(desc => {
             if (desc.hasAttribute('data-clamp-initialized')) return;
@@ -249,18 +335,16 @@
         setupTruncation(document);
     }
 
-    document.addEventListener('DOMContentLoaded', init);
-    document.addEventListener('htmx:afterSwap', init);
-
-    function todayLocalISO() {
-        const d = new Date();
-        const offsetMs = d.getTimezoneOffset() * 60000;
-        return new Date(d.getTime() - offsetMs).toISOString().slice(0, 10);
+    // Runs on first load AND every time htmx swaps this partial in
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
     }
 
-    function shiftDay(dateStr, delta) {
-        const d = new Date(dateStr + "T00:00:00Z");
-        d.setUTCDate(d.getUTCDate() + delta);
-        return d.toISOString().slice(0, 10);
+    // Bind the htmx hook only once, no matter how many times the partial is swapped
+    if (!window.__hwListInitBound) {
+        window.__hwListInitBound = true;
+        document.addEventListener('htmx:afterSwap', init);
     }
 </script>

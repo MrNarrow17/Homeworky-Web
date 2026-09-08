@@ -1,6 +1,6 @@
 from datetime import date as date_type
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from fastapi.requests import Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -18,7 +18,7 @@ from app.security import (
     get_viewer_dependencies,
 )
 from app.services import HomeworkService, StaffService
-from app.tools.time_tools import get_week_range
+from app.tools.time_tools import get_week_range, resolve_date_parameters
 
 router = APIRouter(prefix="", tags=["Classes"])
 templates = Jinja2Templates(directory="app/templates/classes")
@@ -77,18 +77,19 @@ async def join_class(
 
 
 @router.get("/exit/")
-async def logout(request: Request, db_session: Session = Depends(get_session)):
+async def logout(request: Request):
     response = RedirectResponse(url="/classes", status_code=303)
     await session_manager.invalidate_session(request, response)
     return response
 
 
 @router.get("/{class_id}/", response_class=HTMLResponse)
-async def get_class(
+def get_class(
     request: Request,
     class_id: int,
-    week: int | None = None,
-    day: date_type | None = None,
+    year: int | None = Query(None),
+    week: int | None = Query(None),
+    day: date_type | None = Query(None),
     db_session: Session = Depends(get_session),
     viewer: AppSession = Depends(viewer_deps.require_class_any),
 ):
@@ -96,14 +97,10 @@ async def get_class(
     if not db_class:
         raise HTTPException(status_code=404, detail="Class not found")
 
-    now = settings.local_time
-    current_year, current_week, _ = now.isocalendar()
-    selected_week = week if week is not None else current_week
-
-    if day is not None:
-        start_date, end_date = (day, day)
-    else:
-        start_date, end_date = get_week_range(current_year, selected_week)
+    selected_year, selected_week, selected_day = resolve_date_parameters(
+        year, week, day
+    )
+    start_date, end_date = get_week_range(selected_year, selected_week, selected_day)
 
     staff_of_the_month = StaffService.get_best_staff_by_dates(
         db_session, class_id, start_date, end_date
@@ -122,8 +119,9 @@ async def get_class(
             if staff_of_the_month
             else None,
             "homework_list": homework_list,
-            "current_week": selected_week,
-            "selected_day": day.isoformat() if day else None,
+            "selected_year": selected_year,
+            "selected_week": selected_week,
+            "selected_day": selected_day,
             "week_start_date": start_date.strftime("%d.%m"),
             "week_end_date": end_date.strftime("%d.%m"),
             "viewer": viewer,
@@ -132,11 +130,12 @@ async def get_class(
 
 
 @router.get("/{class_id}/homework/", response_class=HTMLResponse)
-async def get_homework_for_week(
+def get_homework_for_week(
     request: Request,
     class_id: int,
-    week: int | None = None,
-    day: date_type | None = None,
+    year: int | None = Query(None),
+    week: int | None = Query(None),
+    day: date_type | None = Query(None),
     db_session: Session = Depends(get_session),
     viewer: AppSession = Depends(viewer_deps.require_class_any),
 ):
@@ -145,14 +144,10 @@ async def get_homework_for_week(
     if not db_class:
         raise HTTPException(status_code=404, detail="Class not found")
 
-    now = settings.local_time
-    current_year, current_week, _ = now.isocalendar()
-    selected_week = week if week is not None else current_week
-
-    if day is not None:
-        start_date, end_date = (day, day)
-    else:
-        start_date, end_date = get_week_range(current_year, selected_week)
+    selected_year, selected_week, selected_day = resolve_date_parameters(
+        year, week, day
+    )
+    start_date, end_date = get_week_range(selected_year, selected_week, selected_day)
 
     homework_list = HomeworkService.get_by_dates(
         db_session, class_id, start_date, end_date
@@ -164,8 +159,9 @@ async def get_homework_for_week(
         context={
             "class_item": ClassPublic.model_validate(db_class),
             "homework_list": homework_list,
-            "current_week": selected_week,
-            "selected_day": day.isoformat() if day else None,
+            "selected_year": selected_year,
+            "selected_week": selected_week,
+            "selected_day": selected_day,
             "week_start_date": start_date.strftime("%d.%m"),
             "week_end_date": end_date.strftime("%d.%m"),
             "viewer": viewer,
