@@ -150,7 +150,9 @@
         </div>
     </div>
 
-    <h3 class="hw-title" style="overflow-wrap: anywhere;">{{ hw.title if hw.title else "Без назви" }}</h3>
+    {% if hw.title %}
+    <h3 class="hw-title" style="overflow-wrap: anywhere;">{{ hw.title }}</h3>
+    {% endif %}
 
     <div class="hw-desc-wrapper position-relative">
         <div class="hw-desc linkify-target mt-2" style="white-space: pre-line; overflow-wrap: anywhere;">{{ hw.description if hw.description else "Опис відсутній." }}</div>

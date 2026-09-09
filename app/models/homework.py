@@ -24,7 +24,7 @@ class Homework(SQLModel, table=True):
     date: date_type
 
     subject: str
-    title: str
+    title: str | None = Field(default=None, nullable=True)
     description: str
     images: list[str] = Field(default_factory=list, sa_type=JSON)
 
