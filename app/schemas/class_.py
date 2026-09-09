@@ -1,3 +1,4 @@
+from pydantic import ConfigDict
 from sqlmodel import Field, SQLModel
 
 
@@ -13,6 +14,8 @@ class ClassJoin(SQLModel):
     """
     Schema for a class join form.
     """
+
+    model_config = ConfigDict(str_strip_whitespace=True)  # type: ignore
 
     id: int
     password: str
